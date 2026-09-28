@@ -7,10 +7,8 @@ import {
   Flame,
   HandHeart,
   Map as MapIcon,
-  Maximize2,
-  Minus,
   PackageOpen,
-  Plus,
+
   Sparkles,
   Star,
   TentTree,
@@ -497,7 +495,6 @@ function MemberJourney({
     return () => map.removeEventListener("wheel", handleWheel);
   }, []);
 
-  const changeZoom = (factor: number) => zoomAt(zoomRef.current * factor);
 
   return (
     <main className={cn("relative mx-auto min-h-dvh max-w-3xl overflow-hidden text-foreground sm:my-6 sm:min-h-[calc(100vh-3rem)] sm:rounded-3xl sm:border sm:border-border sm:shadow-map", member.theme)}>
@@ -595,17 +592,6 @@ function MemberJourney({
         </div>
       </div>
 
-      <div className="absolute left-4 top-[22%] z-50 flex flex-col overflow-hidden rounded-full border border-border bg-surface/95 shadow-soft backdrop-blur">
-        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(1.25)} disabled={zoom >= maxZoom} aria-label="Zoom in" title="Zoom in">
-          <Plus />
-        </Button>
-        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(0.8)} disabled={zoom <= minZoom} aria-label="Zoom out" title="Zoom out">
-          <Minus />
-        </Button>
-        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => { zoomAt(minZoom); setOffset({ x: 0, y: 0 }); offsetRef.current = { x: 0, y: 0 }; }} disabled={zoom === minZoom} aria-label="Show full map" title="Show full map">
-          <Maximize2 />
-        </Button>
-      </div>
 
       <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
         <MapIcon />
