@@ -775,8 +775,6 @@ function PersonalLandscape({ member, camera, zoom, viewport }: { member: Member;
           <circle cx="168" cy="101" r="9"/><circle cx="295" cy="387" r="12"/><circle cx="185" cy="707" r="8"/>
         </g>
       )}
-      <path d={member.route} fill="none" stroke="var(--member-trail-edge)" strokeWidth="39" strokeLinecap="round" />
-      <path d={member.route} fill="none" stroke="var(--member-trail)" strokeWidth="31" strokeLinecap="round" strokeDasharray="3 9" />
       <g transform="translate(218 54)">
         <ellipse cy="19" rx="37" ry="11" fill="var(--finish)" opacity=".7" />
         <path d="M-18 9 L0-14 L19 9 M-12 9 V-1 H13 V9 M0-14 V-27" fill="none" stroke="var(--foreground)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
