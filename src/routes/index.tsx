@@ -344,11 +344,6 @@ function Overview({
                     <span className="text-xs font-semibold text-foreground">{member.name}{member.id === "A" ? " · You" : ""}</span>
                   </div>
                   <p className="absolute bottom-3 left-3 z-10 text-[10px] font-medium text-foreground/70 sm:bottom-5 sm:left-5">{member.region}</p>
-                  {latest && (
-                    <span className="absolute bottom-3 right-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-signal text-signal-foreground shadow-signal sm:bottom-5 sm:right-5">
-                      <SignalIcon kind={latest.kind} className="h-4 w-4" />
-                    </span>
-                  )}
                 </Button>
               );
             })}
