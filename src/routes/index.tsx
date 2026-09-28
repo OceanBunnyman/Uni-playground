@@ -441,7 +441,7 @@ function MemberJourney({
           if (pointersRef.current.size > 1) {
             clearLongPress(map);
             const points = [...pointersRef.current.values()];
-            pinchDistanceRef.current = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+            pinchDistanceRef.current = distanceBetweenFirstTwo(points);
             return;
           }
           if (!isCurrentPlayer || event.button !== 0 || (event.target as Element).closest("button")) return;
@@ -461,7 +461,8 @@ function MemberJourney({
           if (pointersRef.current.size !== 2) return;
           clearLongPress(event.currentTarget);
           const points = [...pointersRef.current.values()];
-          const distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          const distance = distanceBetweenFirstTwo(points);
+          if (distance === null) return;
           const previousDistance = pinchDistanceRef.current;
           if (previousDistance && previousDistance > 0) {
             setZoom((current) => clampZoom(current * (distance / previousDistance)));
@@ -714,6 +715,13 @@ function toScreen(point: Point, camera: Point, zoom = 1) {
 
 function clampZoom(zoom: number) {
   return Math.min(maxZoom, Math.max(minZoom, zoom));
+}
+
+function distanceBetweenFirstTwo(points: Point[]) {
+  const first = points[0];
+  const second = points[1];
+  if (!first || !second) return null;
+  return Math.hypot(first.x - second.x, first.y - second.y);
 }
 
 function finishMapPointer(
