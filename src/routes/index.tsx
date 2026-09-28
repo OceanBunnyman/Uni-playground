@@ -5,15 +5,9 @@ import {
   CloudSun,
   Eye,
   Flame,
-  HandHeart,
   Map as MapIcon,
-  PackageOpen,
 
-  Sparkles,
   Star,
-  TentTree,
-  Waves,
-  Wind,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -21,6 +15,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FogShaderCanvas } from "@/components/FogShaderCanvas";
 import { cn } from "@/lib/utils";
+import isla from "@/assets/characters-0.png";
+import mako from "@/assets/characters-1.png";
+import hana from "@/assets/characters-2.png";
+import mimi from "@/assets/characters-3.png";
+import rocks from "@/assets/landmarks-0.png";
+import bush from "@/assets/landmarks-1.png";
+import bridge from "@/assets/landmarks-2.png";
+import ruins from "@/assets/landmarks-3.png";
+import checkpoint from "@/assets/landmarks-4.png";
+import goal from "@/assets/landmarks-5.png";
+import campfire from "@/assets/signals-0.png";
+import chimes from "@/assets/signals-1.png";
+import signpost from "@/assets/signals-2.png";
+import chest from "@/assets/signals-3.png";
+import star from "@/assets/signals-4.png";
+import clearing from "@/assets/signals-5.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -108,6 +118,20 @@ const members: Member[] = [
     overviewRoute: "M243 202 C184 180 194 129 135 108 C74 87 72 38 12 9",
   },
 ];
+
+const portraits: Record<MemberId, string> = { A: isla, B: mako, C: hana, D: mimi };
+const landscapeObjects = [
+  { image: rocks, x: 70, y: 520, size: 94 },
+  { image: bush, x: 345, y: 462, size: 88 },
+  { image: bridge, x: 127, y: 264, size: 112 },
+  { image: ruins, x: 315, y: 364, size: 108 },
+  { image: checkpoint, x: 285, y: 625, size: 83 },
+  { image: signpost, x: 82, y: 710, size: 78 },
+];
+
+function Character({ id, className = "" }: { id: MemberId; className?: string }) {
+  return <img src={portraits[id]} alt="" width={512} height={512} draggable={false} className={cn("object-contain", className)} />;
+}
 
 const startingPositions: Record<MemberId, Point> = {
   A: { x: 198, y: 615 },
@@ -344,7 +368,7 @@ function Overview({
                 >
                   <OverviewMap member={member} position={positions[member.id]} quadrant={index} />
                   <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-surface/85 py-1 pl-1 pr-3 shadow-soft backdrop-blur sm:left-5 sm:top-5">
-                    <span className={cn("grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-player-ink", member.color)}>{member.id}</span>
+                    <Character id={member.id} className="h-9 w-9 shrink-0" />
                     <span className="text-xs font-semibold text-foreground">{member.name}{member.id === "A" ? " · You" : ""}</span>
                   </div>
                   <p className="absolute bottom-3 left-3 z-10 text-[10px] font-medium text-foreground/70 sm:bottom-5 sm:left-5">{member.region}</p>
@@ -359,7 +383,7 @@ function Overview({
           </div>
 
           <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-[7px] border-map bg-surface text-primary shadow-map sm:h-24 sm:w-24">
-            <TentTree className="h-6 w-6 sm:h-7 sm:w-7" />
+            <img src={goal} alt="" width={512} height={512} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
             <span className="mt-1 text-[9px] font-bold text-foreground">Shared camp</span>
           </div>
         </section>
@@ -385,8 +409,7 @@ function OverviewMap({ member, position, quadrant }: { member: Member; position:
       <path d={member.overviewRoute} fill="none" stroke="var(--member-trail-edge)" strokeWidth="14" strokeLinecap="round" />
       <path d={member.overviewRoute} fill="none" stroke="var(--member-trail)" strokeWidth="9" strokeLinecap="round" strokeDasharray="2 7" />
       <g transform={`translate(${markerX} ${markerY})`}>
-        <circle r="13" fill="var(--surface)" stroke="var(--foreground)" strokeWidth="1.5" />
-        <circle r="7" fill={`var(--player-${member.id.toLowerCase()})`} />
+        <image href={portraits[member.id]} x="-21" y="-27" width="42" height="54" />
       </g>
     </svg>
   );
@@ -510,7 +533,7 @@ function MemberJourney({
           <p className="truncate text-sm font-semibold">{member.name} · {member.region}</p>
           <p className="text-[10px] text-muted-foreground">{isCurrentPlayer ? (destination ? "Walking through the mist" : "Long-press the map to walk somewhere new") : "Viewing a companion's journey"}</p>
         </div>
-        <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold text-player-ink", member.color)}>{member.id}</div>
+        <Character id={member.id} className="h-11 w-11 shrink-0" />
       </header>
 
       <div
@@ -551,7 +574,8 @@ function MemberJourney({
           const previousDistance = pinchDistanceRef.current;
           if (previousDistance && previousDistance > 0) {
             const [a, b] = points;
-            const { fx, fy } = focusOf((a!.x + b!.x) / 2, (a!.y + b!.y) / 2);
+            if (!a || !b) return;
+            const { fx, fy } = focusOf((a.x + b.x) / 2, (a.y + b.y) / 2);
             zoomAt(zoomRef.current * (distance / previousDistance), fx, fy);
           }
           pinchDistanceRef.current = distance;
@@ -560,6 +584,7 @@ function MemberJourney({
         onPointerCancel={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
       >
         <PersonalLandscape member={member} camera={camera} zoom={zoom} />
+        <LandscapeProps camera={camera} zoom={zoom} />
         <WeatherLayer member={member} cleared={weatherCleared} />
         {signals.slice(0, 8).map((signal, index) => (
           <MappedSignal
@@ -588,8 +613,8 @@ function MemberJourney({
         {isCurrentPlayer && destination && <DestinationMarker camera={camera} destination={destination} zoom={zoom} />}
 
         <div className="player-piece absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${toScreen(basePosition, camera, zoom).x}%`, top: `${toScreen(basePosition, camera, zoom).y}%` }}>
-          <span className="absolute -inset-3 rounded-full border border-foreground/10 bg-surface/45" />
-          <span className={cn("relative grid h-11 w-11 place-items-center rounded-full border-2 border-surface text-xs font-bold text-player-ink shadow-player", member.color)}>{member.id}</span>
+          <span className="absolute inset-x-2 bottom-0 h-3 rounded-full bg-foreground/15 blur-sm" />
+          <Character id={member.id} className="relative h-20 w-20 drop-shadow-lg sm:h-24 sm:w-24" />
         </div>
       </div>
 
@@ -623,7 +648,7 @@ function MemberJourney({
         <div className="absolute inset-0 z-[60] flex items-end bg-overlay p-4 sm:items-center sm:justify-center" onClick={onCloseSignal}>
           <section className="w-full rounded-2xl bg-surface p-5 shadow-dock sm:max-w-sm" onClick={(event) => event.stopPropagation()}>
             <div className="mb-5 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-              <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-player-ink", source.color)}>{source.id}</div>
+              <Character id={source.id} className="h-12 w-12 shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold">A trace left by {source.name}</p>
                 <p className="text-xs text-muted-foreground">{effectCopy(open.kind, member.id, source.id)}</p>
@@ -706,12 +731,20 @@ function PersonalLandscape({ member, camera, zoom }: { member: Member; camera: P
       <path d={member.route} fill="none" stroke="var(--member-trail-edge)" strokeWidth="39" strokeLinecap="round" />
       <path d={member.route} fill="none" stroke="var(--member-trail)" strokeWidth="31" strokeLinecap="round" strokeDasharray="3 9" />
       <g transform="translate(218 54)">
-        <ellipse cy="19" rx="37" ry="11" fill="var(--finish)" opacity=".7" />
-        <path d="M-18 9 L0-14 L19 9 M-12 9 V-1 H13 V9 M0-14 V-27" fill="none" stroke="var(--foreground)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M0-27 L19-21 L0-15" fill="var(--signal)" stroke="var(--foreground)" strokeWidth="2" strokeLinejoin="round" />
+        <image href={goal} x="-48" y="-53" width="96" height="96" />
       </g>
     </svg>
   );
+}
+
+function LandscapeProps({ camera, zoom }: { camera: Point; zoom: number }) {
+  return <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true">
+    {landscapeObjects.map((item, index) => {
+      const screen = toScreen({ x: item.x, y: item.y }, camera, zoom);
+      if (screen.x < -25 || screen.x > 125 || screen.y < -25 || screen.y > 125) return null;
+      return <img key={index} src={item.image} alt="" width={512} height={512} draggable={false} className="absolute -translate-x-1/2 -translate-y-1/2 object-contain" style={{ left: `${screen.x}%`, top: `${screen.y}%`, width: `${item.size * zoom}px`, height: `${item.size * zoom}px` }} />;
+    })}
+  </div>;
 }
 
 function WeatherLayer({ member, cleared }: { member: Member; cleared: boolean }) {
@@ -730,8 +763,8 @@ function DiscoveryMarker({ discovery, camera, zoom, completed }: { discovery: Di
   const screen = toScreen(discovery.position, camera, zoom);
   if (screen.x < -15 || screen.x > 115 || screen.y < -15 || screen.y > 115) return null;
   return (
-    <span className="discovery-marker pointer-events-none absolute z-30 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface text-signal-foreground shadow-signal" style={{ left: `${screen.x}%`, top: `${screen.y}%` }} aria-hidden="true">
-      {discovery.kind === "chest" ? <PackageOpen className="h-5 w-5" /> : <HandHeart className="h-5 w-5" />}
+    <span className="discovery-marker pointer-events-none absolute z-30 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center" style={{ left: `${screen.x}%`, top: `${screen.y}%` }} aria-hidden="true">
+      <img src={discovery.kind === "chest" ? chest : checkpoint} alt="" width={512} height={512} className="h-14 w-14 object-contain" />
     </span>
   );
 }
@@ -763,33 +796,14 @@ function MappedSignal({ signal, viewer, camera, zoom, index, onOpen }: { signal:
       style={{ left: `${screen.x}%`, top: `${screen.y}%` }}
       aria-label={`View the trace ${signal.from} left on this map`}
     >
-      {isSmoke ? (
-        <span className="smoke-trace relative flex flex-col items-center text-signal-foreground">
-          <span className="h-6 w-6 rounded-full bg-signal/35" />
-          <span className="-mt-2 h-5 w-5 rounded-full bg-signal/55" />
-          <Flame className="mt-0.5 h-5 w-5 text-fire" />
-        </span>
-      ) : isWind ? (
-        <span className="wind-current relative flex items-center gap-1.5 rounded-full bg-post-soft/90 px-3 py-2 text-[10px] font-semibold text-post shadow-soft backdrop-blur">
-          <Wind className="h-4 w-4" />Chime wind
-        </span>
-      ) : isCloudClear ? (
-        <span className="cloud-clear-marker grid h-12 w-12 place-items-center rounded-full bg-surface/85 text-primary shadow-signal backdrop-blur">
-          <CloudSun className="h-6 w-6" />
-        </span>
-      ) : isStar ? (
-        <span className="star-hang relative grid h-12 w-12 place-items-center rounded-full bg-signal/40 text-signal-foreground shadow-signal backdrop-blur">
-          <Star className="h-6 w-6 fill-current" />
-        </span>
-      ) : signal.kind === "help" && signal.from === viewer ? (
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-fire-soft text-fire shadow-signal"><Flame className="h-6 w-6 fill-current" /></span>
-      ) : signal.kind === "reminder" ? (
-        <span className="chime-sway grid h-11 w-11 place-items-center rounded-full bg-post-soft text-post shadow-signal"><BellRing className="h-5 w-5" /></span>
-      ) : (
-        <span className="relative flex items-center gap-1.5 rounded-full bg-post-soft/90 px-3 py-2 text-[10px] font-semibold text-post shadow-soft backdrop-blur">
-          <Waves className="h-4 w-4" /><SignalIcon kind={signal.kind} className="h-4 w-4" />Companion trace
-        </span>
-      )}
+      <img
+        src={isSmoke || signal.kind === "help" ? campfire : isWind || signal.kind === "reminder" ? chimes : isCloudClear ? clearing : isStar ? star : checkpoint}
+        alt=""
+        width={512}
+        height={512}
+        draggable={false}
+        className={cn("h-16 w-16 object-contain drop-shadow-md", isSmoke && "smoke-trace", isWind && "wind-current", isStar && "star-hang", signal.kind === "reminder" && !isWind && "chime-sway")}
+      />
     </Button>
   );
 }

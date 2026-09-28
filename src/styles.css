@@ -257,7 +257,7 @@
   pointer-events: none;
   position: absolute;
 }
-.player-piece { animation: float 3s ease-in-out infinite; }
+.player-piece { animation: float 3s ease-in-out infinite; pointer-events: none; }
 .smoke-trace { animation: drift 4s ease-in-out infinite; }
 .destination-marker { animation: destination-pulse 1.8s ease-in-out infinite; }
 
