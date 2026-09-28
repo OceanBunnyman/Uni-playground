@@ -435,7 +435,7 @@ function MemberJourney({
   onBack: () => void;
   onMoveTo: (point: Point) => void;
   onSignal: (kind: SignalKind, note?: string) => void;
-  onResolve: () => void;
+  onResolve: (signalId: number) => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
   onCloseDiscovery: () => void;
