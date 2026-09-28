@@ -405,18 +405,13 @@ function MemberJourney({
       <div className="absolute inset-x-0 bottom-0 z-30 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">
         {toast && <div className="mx-auto mb-3 w-fit max-w-[90%] rounded-full bg-foreground/90 px-4 py-2 text-center text-xs text-background shadow-soft">{toast}</div>}
         {isCurrentPlayer ? (
-          <div className="grid grid-cols-[1fr_auto] items-end gap-3 rounded-2xl border border-border bg-surface/95 p-3 shadow-dock backdrop-blur-md">
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-fire-soft text-foreground hover:bg-fire-soft/80" onClick={() => onSignal("fire")}>
-                <Flame className="text-fire" /><span className="text-[11px]">燃起篝火</span>
-              </Button>
-              <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-post-soft text-foreground hover:bg-post-soft/80" onClick={() => onSignal("post")}>
-                <Signpost className="text-post" /><span className="text-[11px]">埋下木桩</span>
-              </Button>
-            </div>
-            <div className="flex h-14 w-24 shrink-0 items-center justify-center rounded-xl bg-secondary/75 px-2 text-center text-[10px] leading-relaxed text-muted-foreground">
-              长按地图<br />移动到该处
-            </div>
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-surface/95 p-3 shadow-dock backdrop-blur-md">
+            <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-fire-soft text-foreground hover:bg-fire-soft/80" onClick={() => onSignal("fire")}>
+              <Flame className="text-fire" /><span className="text-[11px]">燃起篝火</span>
+            </Button>
+            <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-post-soft text-foreground hover:bg-post-soft/80" onClick={() => onSignal("post")}>
+              <Signpost className="text-post" /><span className="text-[11px]">埋下木桩</span>
+            </Button>
           </div>
         ) : (
           <div className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface/92 px-4 py-3 text-xs text-muted-foreground shadow-dock backdrop-blur-md">
