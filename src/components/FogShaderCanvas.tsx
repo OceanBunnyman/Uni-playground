@@ -70,12 +70,16 @@ const fragmentShaderSource = /* glsl */ `
 
     if (clearing > 0.998) discard;
 
+    // Geographic cloud patches: a static, large-scale field decides where
+    // cloud banks exist in the world, leaving open sky between them.
+    float patchField = fbm(world * 0.0019 + vec2(53.0, 17.0)) * 0.75 + fbm(world * 0.0058 + vec2(7.0, 41.0)) * 0.35;
+    float patchMask = smoothstep(0.5, 0.66, patchField);
+    if (patchMask < 0.002) discard;
+
     vec2 drift = vec2(uTime * 0.018, -uTime * 0.011);
     float body = cloudField(world, drift);
     float density = smoothstep(0.2, 0.86, body);
 
-    // Directional shading: light comes from the upper left, so cloud tops
-    // facing the light turn bright while thick cores sink into dark gray.
     vec2 lightDir = normalize(vec2(-0.35, -0.94));
     float eps = 16.0;
     float bodyBelow = cloudField(world - lightDir * eps, drift);
@@ -83,24 +87,16 @@ const fragmentShaderSource = /* glsl */ `
     float facing = clamp(0.5 + (bodyBelow - bodyAbove) * 2.4, 0.0, 1.0);
     float core = smoothstep(0.42, 0.88, body);
 
-    vec3 color = mix(uFogDeep, uFogLight, facing);
-    color = mix(color, uFogDeep * 0.78, core * 0.6);
+    // Soft gray gradient, never darker than #F1F1F1.
+    vec3 deep = vec3(0.945);
+    vec3 light = vec3(1.0);
+    float shade = clamp(facing * 0.8 + (1.0 - core) * 0.35, 0.0, 1.0);
+    vec3 color = mix(deep, light, shade);
+    color = max(color, deep);
 
-    // A darker distant cloud layer drifting at its own pace, composited
-    // underneath to give the fog real depth between gray levels.
-    float distantField = fbm(world * 0.0031 + drift * 0.55 + vec2(31.0, 12.0));
-    float distant = smoothstep(0.52, 0.95, distantField);
-    color = mix(color, uFogDeep * 0.72, distant * 0.5);
-
-    // Silver lining along thin edges of dense clouds, plus a faint vertical
-    // sky gradient so the layering reads even when the noise is calm.
-    float rim = smoothstep(0.28, 0.46, density) * (1.0 - smoothstep(0.52, 0.88, body));
-    color += vec3(0.07, 0.075, 0.08) * rim * (0.4 + facing * 0.6);
-    color += vec3(0.05) * (screenUv.y - 0.5) * -1.0;
-
-    float fogAlpha = mix(0.5, 0.9, density) + distant * 0.06;
+    float fogAlpha = mix(0.85, 1.0, density) * patchMask;
     float boundaryVeil = 1.0 - smoothstep(0.0, 0.94, clearing);
-    gl_FragColor = vec4(color, clamp(fogAlpha * boundaryVeil, 0.0, 0.92));
+    gl_FragColor = vec4(color, clamp(fogAlpha * boundaryVeil, 0.0, 1.0));
   }
 `;
 
