@@ -56,7 +56,7 @@ type Signal = {
   kind: SignalKind;
   note: string;
   position: Point;
-  to?: MemberId[];
+  to?: MemberId[] | undefined;
 };
 
 type Discovery = {
