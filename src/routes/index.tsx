@@ -302,9 +302,8 @@ function MemberJourney({
               x: ((event.clientX - bounds.left) / bounds.width) * 100,
               y: ((event.clientY - bounds.top) / bounds.height) * 100,
             });
-            map.dataset.longPressComplete = String(pointerId);
           }, 420);
-          map.dataset.longPressTimer = String(timer);
+          map.dataset["longPressTimer"] = String(timer);
         }}
         onPointerUp={(event) => clearLongPress(event.currentTarget)}
         onPointerCancel={(event) => clearLongPress(event.currentTarget)}
@@ -447,7 +446,7 @@ function MappedSignal({ signal, viewer, index, onOpen }: { signal: Signal; viewe
 }
 
 function clearLongPress(element: HTMLElement) {
-  const timer = Number(element.dataset.longPressTimer);
+  const timer = Number(element.dataset["longPressTimer"]);
   if (Number.isFinite(timer)) window.clearTimeout(timer);
-  delete element.dataset.longPressTimer;
+  delete element.dataset["longPressTimer"];
 }
