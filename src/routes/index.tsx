@@ -51,6 +51,7 @@ type Signal = {
   to?: MemberId[] | undefined;
   resolved?: boolean;
   read?: boolean;
+  helped?: boolean;
 };
 
 type Discovery = {
@@ -171,7 +172,7 @@ function JourneyGame() {
         return;
       }
 
-      const pace = 6.5;
+      const pace = 9.5;
       const next = {
         x: current.x + (dx / distance) * Math.min(pace, distance),
         y: current.y + (dy / distance) * Math.min(pace, distance),
@@ -267,6 +268,11 @@ function JourneyGame() {
           setOpenedSignal(null);
           setSignals((currentSignals) => currentSignals.map((signal) => signal.id === signalId ? { ...signal, resolved: true } : signal));
           pushToast("Marked as resolved");
+        }}
+        onHelp={(signalId) => {
+          setOpenedSignal(null);
+          setSignals((currentSignals) => currentSignals.map((signal) => signal.id === signalId ? { ...signal, helped: true } : signal));
+          pushToast("You offered to help");
         }}
         onRead={(signalId) => {
           setOpenedSignal(null);
@@ -394,6 +400,7 @@ function MemberJourney({
   onMoveTo,
   onSignal,
   onResolve,
+  onHelp,
   onRead,
   onOpenSignal,
   onCloseSignal,
