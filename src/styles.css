@@ -202,10 +202,18 @@
   background-size: 38px 38px, 26px 26px;
 }
 
-.signal-marker { animation: breathe 3.6s ease-in-out infinite; }
+.signal-marker::after {
+  animation: breathe 3.6s ease-in-out infinite;
+  border: 1px solid color-mix(in oklab, var(--signal) 65%, transparent);
+  border-radius: 999px;
+  content: "";
+  inset: -6px;
+  pointer-events: none;
+  position: absolute;
+}
 .player-piece { animation: float 3s ease-in-out infinite; }
 
-@keyframes breathe { 50% { transform: scale(1.07); } }
+@keyframes breathe { 50% { transform: scale(1.16); opacity: .35; } }
 @keyframes float { 50% { margin-top: -4px; } }
 
 @media (prefers-reduced-motion: reduce) {
