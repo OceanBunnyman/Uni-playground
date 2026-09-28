@@ -434,6 +434,7 @@ function MemberJourney({
         ref={mapRef}
         className={cn("journey-map absolute inset-0 touch-none", isCurrentPlayer && "cursor-crosshair")}
         aria-label={`${member.name}的个人地图`}
+        onContextMenu={(event) => event.preventDefault()}
         onPointerDown={(event) => {
           const map = event.currentTarget;
           pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
