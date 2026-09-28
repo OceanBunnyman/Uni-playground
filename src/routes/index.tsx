@@ -548,21 +548,13 @@ function MemberJourney({
           pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
           if (!onMarker) map.setPointerCapture(event.pointerId);
           if (pointersRef.current.size > 1) {
-            clearLongPress(map);
+            tapStartRef.current = null;
             const points = [...pointersRef.current.values()];
             pinchDistanceRef.current = distanceBetweenFirstTwo(points);
             return;
           }
           if (!isCurrentPlayer || event.button !== 0 || (event.target as Element).closest("button")) return;
-          const timer = window.setTimeout(() => {
-            const bounds = map.getBoundingClientRect();
-            const currentZoom = zoomRef.current;
-            onMoveTo({
-              x: cameraAnchorRef.current.x + offsetRef.current.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (mapViewportRef.current.x / currentZoom),
-              y: cameraAnchorRef.current.y + offsetRef.current.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (mapViewportRef.current.y / currentZoom),
-            });
-          }, 420);
-          map.dataset["longPressTimer"] = String(timer);
+          tapStartRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
         }}
         onPointerMove={(event) => {
           const previousPoint = pointersRef.current.get(event.pointerId);
