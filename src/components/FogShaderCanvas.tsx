@@ -81,7 +81,7 @@ const fragmentShaderSource = /* glsl */ `
     // Geographic cloud patches: a static, large-scale field decides where
     // cloud banks exist in the world, leaving open sky between them.
     float patchField = fbm(world * 0.0019 + vec2(53.0, 17.0)) * 0.75 + fbm(world * 0.0058 + vec2(7.0, 41.0)) * 0.35;
-    float patchMask = smoothstep(0.5, 0.66, patchField);
+    float patchMask = smoothstep(0.38, 0.60, patchField);
     if (patchMask < 0.002) discard;
 
     vec2 drift = vec2(uTime * 0.018, -uTime * 0.011);
