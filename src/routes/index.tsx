@@ -211,7 +211,7 @@ function JourneyGame() {
 
   const active = members.find((member) => member.id === selected);
   const visibleSignals = useMemo(
-    () => signals.filter((signal) => selected !== "A" || signal.from !== "A" || signal.kind === "resolve"),
+    () => signals,
     [selected, signals],
   );
 
@@ -781,6 +781,8 @@ function MappedSignal({ signal, viewer, camera, zoom, index, onOpen }: { signal:
         <span className="star-hang relative grid h-12 w-12 place-items-center rounded-full bg-signal/40 text-signal-foreground shadow-signal backdrop-blur">
           <Star className="h-6 w-6 fill-current" />
         </span>
+      ) : signal.kind === "help" && signal.from === viewer ? (
+        <span className="grid h-11 w-11 place-items-center rounded-full bg-fire-soft text-fire shadow-signal"><Flame className="h-6 w-6 fill-current" /></span>
       ) : signal.kind === "reminder" ? (
         <span className="chime-sway grid h-11 w-11 place-items-center rounded-full bg-post-soft text-post shadow-signal"><BellRing className="h-5 w-5" /></span>
       ) : (
