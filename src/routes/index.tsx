@@ -21,6 +21,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FogShaderCanvas } from "@/components/FogShaderCanvas";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -545,7 +546,12 @@ function MemberJourney({
             completed={completedDiscoveries.has(discovery.id)}
           />
         ))}
-        {isCurrentPlayer && <FogLayer camera={position} explored={explored} zoom={zoom} />}
+        {isCurrentPlayer && (
+          <>
+            <FogLayer camera={position} explored={explored} zoom={zoom} />
+            <FogShaderCanvas camera={position} explored={explored} zoom={zoom} viewSize={{ x: viewSize.width, y: viewSize.height }} />
+          </>
+        )}
 
         {isCurrentPlayer && destination && <DestinationMarker camera={position} destination={destination} zoom={zoom} />}
 

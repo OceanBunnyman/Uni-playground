@@ -11,3 +11,4 @@
 
 - Keep the cooperative journey prototype client-only and session-local until real multiplayer is requested, so the core interaction remains easy to test without backend setup.
 - Keep map zoom camera-based with one shared world coordinate system, so movement, fog, and traces remain aligned at every scale.
+- Render exploration fog with a self-contained WebGL shader and static SVG fallback, so dynamic depth does not add a game-engine dependency.
