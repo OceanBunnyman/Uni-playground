@@ -222,7 +222,7 @@ function JourneyGame() {
     window.setTimeout(() => setToast(""), 2800);
   };
 
-  const leaveSignal = (kind: SignalKind, note?: string) => {
+  const leaveSignal = (kind: SignalKind, note?: string, resolvedId?: number) => {
     const current = positionRef.current;
     if (kind === "resolve") {
       const resolved: Signal = {
@@ -240,8 +240,8 @@ function JourneyGame() {
         note: "Mako hung a star in the sky: thanks for lighting up this stretch.",
       };
       setWeatherCleared(true);
-      setSignals((currentSignals) => [thanks, resolved, ...currentSignals]);
-      pushToast("The mist lifts on A's and B's maps, and B's star lights up");
+      setSignals((currentSignals) => [thanks, resolved, ...currentSignals.filter((item) => item.id !== resolvedId || item.kind !== "help")]);
+      pushToast("The mist lifts on A's and B's maps, and the fire trace is cleared");
       return;
     }
 
