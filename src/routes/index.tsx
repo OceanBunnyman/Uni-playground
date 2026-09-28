@@ -111,6 +111,10 @@ const startingPositions: Record<MemberId, Point> = {
 const initialSignals: Signal[] = [
   { id: 1, from: "B", kind: "reminder", position: { x: 320, y: 240 }, note: "Reminder: two days left until the prototype review deadline — don't forget to wrap up your part." },
   { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Help needed: could someone take a look at my prototype draft and share quick feedback?" },
+  { id: 3, from: "C", kind: "help", position: { x: 402, y: 435 }, note: "Help needed: I'm swamped by the user-survey summaries — could someone take over the next batch?" },
+  { id: 4, from: "D", kind: "reminder", position: { x: 258, y: 128 }, note: "Reminder: the sprint retro starts in an hour — bring your notes and blockers." },
+  { id: 5, from: "B", kind: "help", position: { x: 478, y: 668 }, note: "Help needed: my laptop battery is almost dead — does anyone have the spare charger?" },
+  { id: 6, from: "C", kind: "reminder", position: { x: 142, y: 338 }, note: "Reminder: it's my turn to send the weekly status update today — nudging myself before I forget." },
 ];
 
 const initialDiscoveries: Discovery[] = [
@@ -600,7 +604,7 @@ function MemberJourney({
         }}
       >
         <PersonalLandscape member={member} camera={camera} zoom={zoom} viewport={mapViewport} />
-        {signals.filter((signal) => !signal.to || signal.from === member.id || signal.to.includes(member.id)).slice(0, 8).map((signal, index) => (
+        {signals.filter((signal) => !signal.to || signal.from === member.id || signal.to.includes(member.id)).slice(0, 12).map((signal, index) => (
           <MappedSignal
             key={signal.id}
             signal={signal}
