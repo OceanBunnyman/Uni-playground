@@ -641,14 +641,14 @@ function MemberJourney({
 
 
       <div className="absolute left-4 top-[calc(max(1rem,env(safe-area-inset-top))+0.5rem)] z-50 flex w-fit flex-col items-start gap-2 sm:left-6 sm:top-6">
+        <Button variant="secondary" size="icon" className="h-11 w-11 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
+          <MapIcon />
+        </Button>
         {!isCurrentPlayer && (
           <div className="flex max-w-[11rem] items-center gap-2 rounded-full border border-border bg-surface/92 px-4 py-2.5 text-[11px] leading-snug text-muted-foreground shadow-dock backdrop-blur-md">
             <Eye className="h-4 w-4 shrink-0" />Viewing {member.name}'s path — look around at the traces
           </div>
         )}
-        <Button variant="secondary" size="icon" className="h-11 w-11 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
-          <MapIcon />
-        </Button>
       </div>
 
       {isCurrentPlayer && (
