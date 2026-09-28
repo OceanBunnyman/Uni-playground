@@ -13,7 +13,6 @@ import {
 
   Sparkles,
   Star,
-  TentTree,
   Waves,
   Wind,
   X,
