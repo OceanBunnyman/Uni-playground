@@ -222,7 +222,7 @@ function JourneyGame() {
     window.setTimeout(() => setToast(""), 2800);
   };
 
-  const leaveSignal = (kind: SignalKind, note?: string) => {
+  const leaveSignal = (kind: SignalKind, note?: string, resolvedId?: number) => {
     const current = positionRef.current;
     if (kind === "resolve") {
       const resolved: Signal = {
@@ -240,8 +240,8 @@ function JourneyGame() {
         note: "Mako hung a star in the sky: thanks for lighting up this stretch.",
       };
       setWeatherCleared(true);
-      setSignals((currentSignals) => [thanks, resolved, ...currentSignals]);
-      pushToast("The mist lifts on A's and B's maps, and B's star lights up");
+      setSignals((currentSignals) => [thanks, resolved, ...currentSignals.filter((item) => item.id !== resolvedId || item.kind !== "help")]);
+      pushToast("The mist lifts on A's and B's maps, and the fire trace is cleared");
       return;
     }
 
@@ -281,9 +281,9 @@ function JourneyGame() {
           setDestination(point);
         }}
         onSignal={leaveSignal}
-        onResolve={() => {
+        onResolve={(signalId) => {
           setOpenedSignal(null);
-          leaveSignal("resolve");
+          leaveSignal("resolve", undefined, signalId);
         }}
         onOpenSignal={(id) => {
           destinationRef.current = null;
@@ -435,7 +435,7 @@ function MemberJourney({
   onBack: () => void;
   onMoveTo: (point: Point) => void;
   onSignal: (kind: SignalKind, note?: string) => void;
-  onResolve: () => void;
+  onResolve: (signalId: number) => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
   onCloseDiscovery: () => void;
@@ -711,7 +711,7 @@ function MemberJourney({
             {isCurrentPlayer && (
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="secondary" onClick={() => onReply(`Let ${source.name} know you saw it`)}>I see it</Button>
-                <Button onClick={onResolve}><CloudSun className="h-4 w-4" />Resolved</Button>
+                <Button onClick={() => onResolve(open.id)}><CloudSun className="h-4 w-4" />Resolved</Button>
               </div>
             )}
           </section>
