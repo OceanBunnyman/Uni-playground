@@ -428,7 +428,7 @@ function MappedSignal({ signal, viewer, index, onOpen }: { signal: Signal; viewe
 }
 
 function DirectionPad({ onMove }: { onMove: (dx: number, dy: number) => void }) {
-  const intervalRef = useRef<ReturnType<typeof window.setInterval> | null>(null);
+  const intervalRef = useRef<number | null>(null);
 
   const stop = () => {
     if (intervalRef.current !== null) {
