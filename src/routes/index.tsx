@@ -164,7 +164,7 @@ function JourneyGame() {
         return;
       }
 
-      const pace = 2.8;
+      const pace = 4.2;
       const next = {
         x: current.x + (dx / distance) * Math.min(pace, distance),
         y: current.y + (dy / distance) * Math.min(pace, distance),
