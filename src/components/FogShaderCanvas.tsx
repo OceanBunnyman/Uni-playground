@@ -91,6 +91,8 @@ function createShader(gl: WebGLRenderingContext, type: number, source: string) {
 
 export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: Point; explored: Point[]; zoom: number; viewSize: Point }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const stateRef = useRef({ camera, explored, zoom, viewSize });
+  stateRef.current = { camera, explored, zoom, viewSize };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -128,18 +130,6 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
     const fogDeep = readRgb(canvas, "--fog-deep-rgb", [0.68, 0.75, 0.71]);
     gl.uniform3fv(fogLightLocation, fogLight);
     gl.uniform3fv(fogDeepLocation, fogDeep);
-    gl.uniform2f(cameraLocation, camera.x, camera.y);
-    gl.uniform2f(viewSizeLocation, viewSize.x, viewSize.y);
-    gl.uniform1f(zoomLocation, zoom);
-
-    const margin = 110 / zoom;
-    const halfWidth = viewSize.x / zoom / 2 + margin;
-    const halfHeight = viewSize.y / zoom / 2 + margin;
-    const nearby = explored.filter((point) => Math.abs(point.x - camera.x) <= halfWidth && Math.abs(point.y - camera.y) <= halfHeight);
-    const clearings = [{ x: 198, y: 615 }, ...nearby.filter((point) => point.x !== 198 || point.y !== 615)].slice(0, 128);
-    gl.uniform1i(clearingCountLocation, clearings.length);
-    gl.uniform2fv(clearingsLocation, new Float32Array(clearings.flatMap((point) => [point.x, point.y])));
-
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const resize = () => {
       const scale = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -156,7 +146,18 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
     let frame = 0;
     const started = performance.now();
     const render = (now: number) => {
+      const current = stateRef.current;
       resize();
+      gl.uniform2f(cameraLocation, current.camera.x, current.camera.y);
+      gl.uniform2f(viewSizeLocation, current.viewSize.x, current.viewSize.y);
+      gl.uniform1f(zoomLocation, current.zoom);
+      const margin = 110 / current.zoom;
+      const halfWidth = current.viewSize.x / current.zoom / 2 + margin;
+      const halfHeight = current.viewSize.y / current.zoom / 2 + margin;
+      const nearby = current.explored.filter((point) => Math.abs(point.x - current.camera.x) <= halfWidth && Math.abs(point.y - current.camera.y) <= halfHeight);
+      const clearings = [{ x: 198, y: 615 }, ...nearby.filter((point) => point.x !== 198 || point.y !== 615)].slice(0, 128);
+      gl.uniform1i(clearingCountLocation, clearings.length);
+      gl.uniform2fv(clearingsLocation, new Float32Array(clearings.flatMap((point) => [point.x, point.y])));
       gl.uniform1f(timeLocation, reduceMotion ? 0 : (now - started) / 1000);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
@@ -172,7 +173,7 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
       gl.deleteShader(vertexShader);
       gl.deleteShader(fragmentShader);
     };
-  }, [camera.x, camera.y, explored, viewSize.x, viewSize.y, zoom]);
+  }, []);
 
   return <canvas ref={canvasRef} className="fog-shader-canvas pointer-events-none absolute inset-0 z-[36] h-full w-full" aria-hidden="true" />;
 }
