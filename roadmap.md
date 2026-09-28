@@ -13,5 +13,5 @@
 
 - [x] 用 WebGL Shader 渲染动态迷雾并保留永久探索遮罩
 - [x] 恢复人物视角跟随，并统一背景、迷雾与痕迹的世界坐标
-- [ ] Map color themes: A blue, B yellow, C green, D red (map + member accents)
-- [ ] Verify note composer flow end-to-end (in progress)
+- [x] Map color themes: A blue, B yellow, C green, D red (map + member accents)
+- [x] Verify note composer flow end-to-end
