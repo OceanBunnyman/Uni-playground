@@ -247,7 +247,7 @@ function JourneyGame() {
       id: Date.now(),
       from: "A",
       kind,
-      position: current,
+      position: { x: current.x + 34, y: current.y - 26 },
       note: kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns.",
     };
     setSignals((currentSignals) => [signal, ...currentSignals]);
