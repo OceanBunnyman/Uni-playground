@@ -837,6 +837,13 @@ function MappedSignal({ signal, viewer, camera, zoom, viewport, index, onOpen }:
 }
 
 
+function SignalIcon({ kind, className }: { kind: SignalKind; className?: string }) {
+  if (kind === "help") return <Waves className={className} />;
+  if (kind === "resolve") return <CloudSun className={className} />;
+  if (kind === "reminder") return <BellRing className={className} />;
+  return <Star className={className} />;
+}
+
 function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
   if (kind === "help" && viewer === "B") return "A's fire becomes smoke on B's map";
   if (kind === "resolve" && (viewer === "A" || viewer === "B")) return "The mist parts and the sky clears";
