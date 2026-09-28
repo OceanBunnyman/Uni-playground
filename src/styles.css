@@ -105,10 +105,10 @@
   --alive: oklch(0.65 0.13 150);
   --signal: oklch(0.88 0.11 76);
   --signal-foreground: oklch(0.34 0.07 54);
-  --player-a: oklch(0.74 0.11 191);
-  --player-b: oklch(0.78 0.12 78);
-  --player-c: oklch(0.72 0.11 140);
-  --player-d: oklch(0.72 0.11 28);
+  --player-a: oklch(0.72 0.12 245);
+  --player-b: oklch(0.82 0.14 88);
+  --player-c: oklch(0.72 0.13 150);
+  --player-d: oklch(0.7 0.16 28);
   --player-ink: oklch(0.25 0.03 150);
   --fire: oklch(0.64 0.18 38);
   --fire-soft: oklch(0.94 0.05 52);
@@ -205,40 +205,40 @@
 }
 
 .map-theme-a {
-  --member-map: oklch(0.92 0.045 148);
-  --member-trail: oklch(0.84 0.055 83);
-  --member-trail-edge: oklch(0.77 0.055 90);
-  --member-water: oklch(0.72 0.085 213);
-  --member-detail: oklch(0.75 0.075 143);
+  --member-map: oklch(0.91 0.045 240);
+  --member-trail: oklch(0.86 0.05 235);
+  --member-trail-edge: oklch(0.78 0.06 245);
+  --member-water: oklch(0.7 0.1 250);
+  --member-detail: oklch(0.72 0.08 250);
   --fog-light-rgb: 0.88 0.88 0.86;
   --fog-deep-rgb: 0.44 0.47 0.46;
   background-color: var(--member-map);
 }
 
 .map-theme-b {
-  --member-map: oklch(0.91 0.038 214);
-  --member-trail: oklch(0.87 0.048 81);
-  --member-trail-edge: oklch(0.75 0.055 190);
-  --member-water: oklch(0.69 0.105 224);
-  --member-detail: oklch(0.77 0.06 183);
+  --member-map: oklch(0.92 0.05 88);
+  --member-trail: oklch(0.86 0.055 76);
+  --member-trail-edge: oklch(0.76 0.07 80);
+  --member-water: oklch(0.72 0.08 210);
+  --member-detail: oklch(0.76 0.09 90);
   background-color: var(--member-map);
 }
 
 .map-theme-c {
-  --member-map: oklch(0.9 0.035 250);
-  --member-trail: oklch(0.85 0.045 76);
-  --member-trail-edge: oklch(0.7 0.05 264);
-  --member-water: oklch(0.73 0.07 227);
-  --member-detail: oklch(0.65 0.07 272);
+  --member-map: oklch(0.91 0.045 148);
+  --member-trail: oklch(0.84 0.055 88);
+  --member-trail-edge: oklch(0.77 0.06 150);
+  --member-water: oklch(0.72 0.085 213);
+  --member-detail: oklch(0.74 0.08 150);
   background-color: var(--member-map);
 }
 
 .map-theme-d {
-  --member-map: oklch(0.93 0.055 95);
-  --member-trail: oklch(0.88 0.05 66);
-  --member-trail-edge: oklch(0.74 0.075 66);
+  --member-map: oklch(0.92 0.045 30);
+  --member-trail: oklch(0.86 0.055 60);
+  --member-trail-edge: oklch(0.75 0.07 35);
   --member-water: oklch(0.72 0.07 210);
-  --member-detail: oklch(0.79 0.09 113);
+  --member-detail: oklch(0.76 0.09 32);
   background-color: var(--member-map);
 }
 
