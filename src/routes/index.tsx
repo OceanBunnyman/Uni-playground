@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
       { title: "Together · A Four-Person Journey" },
       { name: "description", content: "Four people travel different routes and discover the traces their companions leave on each other's maps." },
       { property: "og:title", content: "Together · A Four-Person Journey" },
-      { property: "og:description", content: "Walk different paths, notice each other's campfires, wind chimes, stars and clearing skies, and reach camp together." },
+      { property: "og:description", content: "Walk different paths, notice each other's campfires and wind chimes, discover hidden chests, and reach camp together." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -796,7 +796,7 @@ function MappedSignal({ signal, viewer, camera, zoom, viewport, index, onOpen }:
     <Button
       variant="ghost"
       onClick={onOpen}
-      className={cn("signal-marker absolute z-30 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full p-0 hover:bg-transparent", index > 3 && "opacity-80")}
+      className={cn("absolute z-30 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full p-0 hover:bg-transparent", !isOwn && "signal-marker", index > 3 && "opacity-80")}
       style={{ left: `${screen.x}%`, top: `${screen.y}%` }}
       aria-label={`View the trace ${signal.from} left on this map`}
     >
