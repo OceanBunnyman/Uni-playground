@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight, Flame, Footprints, MapPin, Signpost, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Flame, Footprints, Signpost, Sparkles, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
