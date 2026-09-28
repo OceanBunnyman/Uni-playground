@@ -9,7 +9,7 @@ import {
   Wind,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -100,12 +100,69 @@ const initialSignals: Signal[] = [
   { id: 2, from: "D", kind: "fire", note: "在草坡背风处歇一会儿，火还暖着。" },
 ];
 
+const tracePositions: Point[] = [
+  { x: 25, y: 37 },
+  { x: 82, y: 54 },
+  { x: 31, y: 66 },
+];
+
 function JourneyGame() {
   const [selected, setSelected] = useState<MemberId | null>(null);
   const [positions, setPositions] = useState(startingPositions);
   const [signals, setSignals] = useState<Signal[]>(initialSignals);
   const [openedSignal, setOpenedSignal] = useState<number | null>(null);
   const [toast, setToast] = useState("");
+  const [destination, setDestination] = useState<Point | null>(null);
+  const positionRef = useRef(startingPositions.A);
+  const destinationRef = useRef<Point | null>(null);
+  const selectedRef = useRef<MemberId | null>(null);
+  const signalsRef = useRef(initialSignals);
+  const openedSignalRef = useRef<number | null>(null);
+  const encounteredRef = useRef(new Set<number>());
+
+  selectedRef.current = selected;
+  signalsRef.current = signals;
+  openedSignalRef.current = openedSignal;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const target = destinationRef.current;
+      if (!target || selectedRef.current !== "A" || openedSignalRef.current !== null) return;
+
+      const current = positionRef.current;
+      const dx = target.x - current.x;
+      const dy = target.y - current.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance < 0.65) {
+        destinationRef.current = null;
+        setDestination(null);
+        return;
+      }
+
+      const pace = 0.42;
+      const next = {
+        x: current.x + (dx / distance) * Math.min(pace, distance),
+        y: current.y + (dy / distance) * Math.min(pace, distance),
+      };
+      positionRef.current = next;
+      setPositions((currentPositions) => ({ ...currentPositions, A: next }));
+
+      const encountered = signalsRef.current.slice(0, 3).find((signal, index) => {
+        if (signal.from === "A" || encounteredRef.current.has(signal.id)) return false;
+        const trace = tracePositions[index];
+        return trace ? Math.hypot(next.x - trace.x, next.y - trace.y) <= 6 : false;
+      });
+
+      if (encountered) {
+        encounteredRef.current.add(encountered.id);
+        destinationRef.current = null;
+        setDestination(null);
+        setOpenedSignal(encountered.id);
+      }
+    }, 50);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const active = members.find((member) => member.id === selected);
   const visibleSignals = useMemo(
@@ -133,22 +190,28 @@ function JourneyGame() {
         signals={visibleSignals}
         openedSignal={openedSignal}
         toast={toast}
+        destination={destination}
         isCurrentPlayer={active.id === "A"}
         onBack={() => {
+          destinationRef.current = null;
+          setDestination(null);
           setSelected(null);
           setOpenedSignal(null);
         }}
-        onMoveTo={(point) =>
-          setPositions((current) => ({
-            ...current,
-            A: {
-              x: Math.min(94, Math.max(6, point.x)),
-              y: Math.min(92, Math.max(10, point.y)),
-            },
-          }))
-        }
+        onMoveTo={(point) => {
+          const nextDestination = {
+            x: Math.min(94, Math.max(6, point.x)),
+            y: Math.min(92, Math.max(10, point.y)),
+          };
+          destinationRef.current = nextDestination;
+          setDestination(nextDestination);
+        }}
         onSignal={leaveSignal}
-        onOpenSignal={setOpenedSignal}
+        onOpenSignal={(id) => {
+          destinationRef.current = null;
+          setDestination(null);
+          setOpenedSignal(id);
+        }}
         onCloseSignal={() => setOpenedSignal(null)}
         onReply={(text) => {
           setOpenedSignal(null);
@@ -252,6 +315,7 @@ function MemberJourney({
   signals,
   openedSignal,
   toast,
+  destination,
   isCurrentPlayer,
   onBack,
   onMoveTo,
@@ -265,6 +329,7 @@ function MemberJourney({
   signals: Signal[];
   openedSignal: number | null;
   toast: string;
+  destination: Point | null;
   isCurrentPlayer: boolean;
   onBack: () => void;
   onMoveTo: (point: Point) => void;
@@ -284,7 +349,7 @@ function MemberJourney({
         </Button>
         <div className="min-w-0 text-center">
           <p className="truncate text-sm font-semibold">{member.name} · {member.region}</p>
-          <p className="text-[10px] text-muted-foreground">{isCurrentPlayer ? "长按方向，在自己的路上自由行走" : "正在查看伙伴的路途"}</p>
+          <p className="text-[10px] text-muted-foreground">{isCurrentPlayer ? (destination ? "正在向目的地前进" : "长按地图，选择想去的地方") : "正在查看伙伴的路途"}</p>
         </div>
         <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold text-player-ink", member.color)}>{member.id}</div>
       </header>
@@ -320,8 +385,16 @@ function MemberJourney({
           />
         ))}
 
+        {isCurrentPlayer && destination && (
+          <span
+            className="destination-marker pointer-events-none absolute z-10 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/55"
+            style={{ left: `${destination.x}%`, top: `${destination.y}%` }}
+            aria-hidden="true"
+          />
+        )}
+
         <div
-          className="player-piece absolute z-20 -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-150"
+          className="player-piece absolute z-20 -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-75"
           style={{ left: `${position.x}%`, top: `${position.y}%` }}
         >
           <span className="absolute -inset-3 rounded-full border border-foreground/10 bg-surface/45" />
