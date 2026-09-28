@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep the cooperative journey prototype client-only and session-local until real multiplayer is requested, so the core interaction remains easy to test without backend setup.
