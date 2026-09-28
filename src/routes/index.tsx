@@ -641,7 +641,7 @@ function MemberJourney({
             <Eye className="h-4 w-4 shrink-0" />Viewing {member.name}'s path — look around at the traces
           </div>
         )}
-        <Button variant="secondary" size="icon" className="w-fit rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
+        <Button variant="secondary" size="icon" className="h-11 w-11 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
           <MapIcon />
         </Button>
       </div>
