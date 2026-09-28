@@ -5,7 +5,7 @@ import {
   CloudSun,
   Eye,
   Flame,
-  Map,
+  Map as MapIcon,
   Maximize2,
   Minus,
   Plus,
@@ -507,7 +507,7 @@ function MemberJourney({
       </div>
 
       <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="进入四人路线总览">
-        <Map />
+        <MapIcon />
       </Button>
 
       <div className="absolute inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pr-20 sm:px-6 sm:pb-6 sm:pr-24">
