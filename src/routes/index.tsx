@@ -211,7 +211,7 @@ function JourneyGame() {
 
   const active = members.find((member) => member.id === selected);
   const visibleSignals = useMemo(
-    () => signals.filter((signal) => signal.from !== selected || signal.kind === "resolve"),
+    () => signals.filter((signal) => selected !== "A" || signal.from !== "A" || signal.kind === "resolve"),
     [selected, signals],
   );
 
@@ -520,8 +520,9 @@ function MemberJourney({
         onContextMenu={(event) => event.preventDefault()}
         onPointerDown={(event) => {
           const map = event.currentTarget;
+          const onMarker = Boolean((event.target as Element).closest("button"));
           pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-          map.setPointerCapture(event.pointerId);
+          if (!onMarker) map.setPointerCapture(event.pointerId);
           if (pointersRef.current.size > 1) {
             clearLongPress(map);
             const points = [...pointersRef.current.values()];
