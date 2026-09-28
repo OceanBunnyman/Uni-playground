@@ -279,6 +279,10 @@ function JourneyGame() {
           setDestination(point);
         }}
         onSignal={leaveSignal}
+        onResolve={() => {
+          setOpenedSignal(null);
+          leaveSignal("resolve");
+        }}
         onOpenSignal={(id) => {
           destinationRef.current = null;
           setDestination(null);
@@ -407,6 +411,7 @@ function MemberJourney({
   onBack,
   onMoveTo,
   onSignal,
+  onResolve,
   onOpenSignal,
   onCloseSignal,
   onCloseDiscovery,
@@ -428,6 +433,7 @@ function MemberJourney({
   onBack: () => void;
   onMoveTo: (point: Point) => void;
   onSignal: (kind: SignalKind) => void;
+  onResolve: () => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
   onCloseDiscovery: () => void;
@@ -638,9 +644,6 @@ function MemberJourney({
             <Button variant="ghost" className="h-11 justify-start gap-2 rounded-full bg-post-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-post-soft/80" onClick={() => onSignal("reminder")}>
               <BellRing className="text-post" /><span className="text-[11px]">Remind</span>
             </Button>
-            <Button variant="ghost" className="h-11 justify-start gap-2 rounded-full bg-signal/45 px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-signal/60" onClick={() => onSignal("resolve")}>
-              <CloudSun className="text-primary" /><span className="text-[11px]">Resolved</span>
-            </Button>
           </>
         ) : (
           <div className="flex max-w-[11rem] items-center gap-2 rounded-full border border-border bg-surface/92 px-4 py-2.5 text-[11px] leading-snug text-muted-foreground shadow-dock backdrop-blur-md">
@@ -673,7 +676,7 @@ function MemberJourney({
             {isCurrentPlayer && (
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="secondary" onClick={() => onReply(`Let ${source.name} know you saw it`)}>I see it</Button>
-                <Button onClick={() => onReply(`Left a star for ${source.name}`)}>Leave a star</Button>
+                <Button onClick={onResolve}><CloudSun className="h-4 w-4" />Resolved</Button>
               </div>
             )}
           </section>
@@ -826,19 +829,13 @@ function MappedSignal({ signal, viewer, camera, zoom, viewport, index, onOpen }:
         <span className="chime-sway grid h-11 w-11 place-items-center rounded-full bg-post-soft text-post shadow-signal"><BellRing className="h-5 w-5" /></span>
       ) : (
         <span className="relative flex items-center gap-1.5 rounded-full bg-post-soft/90 px-3 py-2 text-[10px] font-semibold text-post shadow-soft backdrop-blur">
-          <Waves className="h-4 w-4" /><SignalIcon kind={signal.kind} className="h-4 w-4" />Companion trace
+          <Waves className="h-4 w-4" />Companion trace
         </span>
       )}
     </Button>
   );
 }
 
-function SignalIcon({ kind, className }: { kind: SignalKind; className?: string }) {
-  if (kind === "help") return <Flame className={className} />;
-  if (kind === "resolve") return <CloudSun className={className} />;
-  if (kind === "reminder") return <BellRing className={className} />;
-  return <Star className={className} />;
-}
 
 function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
   if (kind === "help" && viewer === "B") return "A's fire becomes smoke on B's map";
