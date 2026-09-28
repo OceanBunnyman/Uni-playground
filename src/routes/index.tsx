@@ -108,8 +108,8 @@ const startingPositions: Record<MemberId, Point> = {
 };
 
 const initialSignals: Signal[] = [
-  { id: 1, from: "B", kind: "reminder", position: { x: 320, y: 240 }, note: "Reminder: the river bend gets slippery after noon — keep to the left bank." },
-  { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Help needed: I'm stuck on the sheltered slope and could use a hand getting across." },
+  { id: 1, from: "B", kind: "reminder", position: { x: 320, y: 240 }, note: "Reminder: two days left until the prototype review deadline — don't forget to wrap up your part." },
+  { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Help needed: could someone take a look at my prototype draft and share quick feedback?" },
 ];
 
 const initialDiscoveries: Discovery[] = [
@@ -231,7 +231,7 @@ function JourneyGame() {
       kind,
       position: { x: current.x + 34, y: current.y - 26 },
       to: to && to.length ? to : undefined,
-      note: note?.trim() || (kind === "help" ? "Help needed: this stretch is tough — could someone give me a hand?" : "Reminder: keep an eye on this spot when you pass by."),
+      note: note?.trim() || (kind === "help" ? "Help needed: could someone take a look at my work and give a hand?" : "Reminder: a deadline is coming up — keep it in mind."),
     };
     setSignals((currentSignals) => [signal, ...currentSignals]);
     const names = to && to.length ? to.map((id) => members.find((m) => m.id === id)?.name ?? id).join(", ") : "everyone";
@@ -662,7 +662,7 @@ function MemberJourney({
                 onChange={(event) => setDraft(event.target.value)}
                 autoFocus
                 maxLength={80}
-                placeholder={composer === "help" ? "What do you need help with?" : "What should the others know?"}
+                placeholder={composer === "help" ? "Need help with… e.g. reviewing my prototype" : "Remind the team of… e.g. an upcoming deadline"}
                 className="w-44 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground/70 sm:w-56"
               />
               <Button type="submit" size="icon" className="h-8 w-8 shrink-0 rounded-full" aria-label="Leave the signal">
