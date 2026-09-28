@@ -13,7 +13,6 @@ import {
 
   Sparkles,
   Star,
-  TentTree,
   Waves,
   Wind,
   X,
@@ -364,10 +363,6 @@ function Overview({
             })}
           </div>
 
-          <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-[7px] border-map bg-surface text-primary shadow-map sm:h-24 sm:w-24">
-            <TentTree className="h-6 w-6 sm:h-7 sm:w-7" />
-            <span className="mt-1 text-[9px] font-bold text-foreground">Shared camp</span>
-          </div>
         </section>
 
         <footer className="mt-5 flex items-center justify-between gap-4 text-xs text-muted-foreground">
