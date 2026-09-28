@@ -108,8 +108,8 @@ const startingPositions: Record<MemberId, Point> = {
 };
 
 const initialSignals: Signal[] = [
-  { id: 1, from: "B", kind: "reminder", position: { x: 320, y: 240 }, note: "A string of wind chimes by the river: there's a tailwind at the bend." },
-  { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Smoke rises on the sheltered slope — Mimi could use a hand here." },
+  { id: 1, from: "B", kind: "reminder", position: { x: 320, y: 240 }, note: "Reminder: the river bend gets slippery after noon — keep to the left bank." },
+  { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Help needed: I'm stuck on the sheltered slope and could use a hand getting across." },
 ];
 
 const initialDiscoveries: Discovery[] = [
@@ -231,7 +231,7 @@ function JourneyGame() {
       kind,
       position: { x: current.x + 34, y: current.y - 26 },
       to: to && to.length ? to : undefined,
-      note: note?.trim() || (kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns."),
+      note: note?.trim() || (kind === "help" ? "Help needed: this stretch is tough — could someone give me a hand?" : "Reminder: keep an eye on this spot when you pass by."),
     };
     setSignals((currentSignals) => [signal, ...currentSignals]);
     const names = to && to.length ? to.map((id) => members.find((m) => m.id === id)?.name ?? id).join(", ") : "everyone";
