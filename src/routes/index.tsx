@@ -670,9 +670,7 @@ function MemberJourney({
         <div className="absolute inset-0 z-[60] flex items-end bg-overlay p-4 sm:items-center sm:justify-center" onClick={onCloseDiscovery}>
           <section className="w-full rounded-2xl bg-surface p-5 shadow-dock sm:max-w-sm" onClick={(event) => event.stopPropagation()}>
             <div className="mb-4 flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-signal/45 text-signal-foreground">
-                {openDiscovery.kind === "chest" ? <PackageOpen /> : <HandHeart />}
-              </span>
+              <img src={openDiscovery.kind === "chest" ? chest : checkpoint} alt="" width={512} height={512} className="h-12 w-12 shrink-0 object-contain" />
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold text-muted-foreground">Found beneath the mist</p>
                 <h2 className="font-display text-lg font-semibold">{openDiscovery.title}</h2>
