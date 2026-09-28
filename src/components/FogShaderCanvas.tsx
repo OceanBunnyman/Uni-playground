@@ -10,7 +10,11 @@ const vertexShaderSource = /* glsl */ `
 `;
 
 const fragmentShaderSource = /* glsl */ `
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
+  precision highp float;
+  #else
   precision mediump float;
+  #endif
   #define MAX_CLEARINGS 128
 
   uniform vec2 uResolution;
@@ -24,7 +28,11 @@ const fragmentShaderSource = /* glsl */ `
   uniform vec3 uFogDeep;
 
   float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    // Sin-free hash: stable on mobile GPUs with low float precision.
+    p = mod(p, 289.0);
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
   }
 
   float noise(vec2 p) {
@@ -96,7 +104,8 @@ const fragmentShaderSource = /* glsl */ `
 
     float fogAlpha = mix(0.85, 1.0, density) * patchMask;
     float boundaryVeil = 1.0 - smoothstep(0.0, 0.94, clearing);
-    gl_FragColor = vec4(color, clamp(fogAlpha * boundaryVeil, 0.0, 1.0));
+    float alpha = clamp(fogAlpha * boundaryVeil, 0.0, 1.0);
+    gl_FragColor = vec4(color * alpha, alpha);
   }
 `;
 
@@ -128,7 +137,7 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext("webgl", { alpha: true, antialias: false, premultipliedAlpha: false, powerPreference: "low-power" });
+    const gl = canvas.getContext("webgl", { alpha: true, antialias: false, premultipliedAlpha: true, powerPreference: "low-power" });
     if (!gl) return;
 
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
