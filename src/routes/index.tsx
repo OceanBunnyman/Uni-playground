@@ -887,7 +887,7 @@ function finishMapPointer(
   pointersRef: { current: Map<number, Point> },
   pinchDistanceRef: { current: number | null },
 ) {
-  element; element = element;
+  void element;
   pointersRef.current.delete(pointerId);
   if (pointersRef.current.size < 2) pinchDistanceRef.current = null;
 }
