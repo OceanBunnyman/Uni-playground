@@ -8,6 +8,8 @@ import {
   HandHeart,
   Map as MapIcon,
   PackageOpen,
+  Send,
+
 
   Sparkles,
   Star,
@@ -220,7 +222,7 @@ function JourneyGame() {
     window.setTimeout(() => setToast(""), 2800);
   };
 
-  const leaveSignal = (kind: SignalKind) => {
+  const leaveSignal = (kind: SignalKind, note?: string) => {
     const current = positionRef.current;
     if (kind === "resolve") {
       const resolved: Signal = {
@@ -248,7 +250,7 @@ function JourneyGame() {
       from: "A",
       kind,
       position: { x: current.x + 34, y: current.y - 26 },
-      note: kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns.",
+      note: note?.trim() || (kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns."),
     };
     setSignals((currentSignals) => [signal, ...currentSignals]);
     pushToast(kind === "help" ? "A's fire will appear as distant smoke on B's map" : "The chime will become visible wind on B's path");
@@ -432,7 +434,7 @@ function MemberJourney({
   isCurrentPlayer: boolean;
   onBack: () => void;
   onMoveTo: (point: Point) => void;
-  onSignal: (kind: SignalKind) => void;
+  onSignal: (kind: SignalKind, note?: string) => void;
   onResolve: () => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
@@ -444,6 +446,9 @@ function MemberJourney({
   const open = signals.find((signal) => signal.id === openedSignal);
   const source = members.find((item) => item.id === open?.from);
   const openDiscovery = discoveries.find((item) => item.id === openedDiscovery);
+  const [composer, setComposer] = useState<SignalKind | null>(null);
+  const [draft, setDraft] = useState("");
+  const draftRef = useRef<HTMLInputElement | null>(null);
   const [zoom, setZoomState] = useState(1);
   const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
   const [mapViewport, setMapViewport] = useState<Point>({ x: viewSize.width, y: viewSize.height });
@@ -636,26 +641,52 @@ function MemberJourney({
 
 
       <div className="absolute left-4 top-[calc(max(1rem,env(safe-area-inset-top))+0.5rem)] z-50 flex w-fit flex-col items-start gap-2 sm:left-6 sm:top-6">
+        <Button variant="secondary" size="icon" className="h-11 w-11 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
+          <MapIcon />
+        </Button>
         {!isCurrentPlayer && (
           <div className="flex max-w-[11rem] items-center gap-2 rounded-full border border-border bg-surface/92 px-4 py-2.5 text-[11px] leading-snug text-muted-foreground shadow-dock backdrop-blur-md">
             <Eye className="h-4 w-4 shrink-0" />Viewing {member.name}'s path — look around at the traces
           </div>
         )}
-        <Button variant="secondary" size="icon" className="h-11 w-11 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
-          <MapIcon />
-        </Button>
       </div>
 
       {isCurrentPlayer && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">
-          <div className="pointer-events-auto mx-auto flex w-fit items-center gap-2">
-            <Button variant="ghost" className="h-11 gap-2 rounded-full bg-fire-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-fire-soft/80" onClick={() => onSignal("help")}>
+        <div className="pointer-events-auto mx-auto flex w-fit flex-col items-center gap-2">
+          {composer && (
+            <form
+              className="flex items-center gap-2 rounded-full border border-border bg-surface/95 py-1.5 pl-4 pr-1.5 shadow-dock backdrop-blur-md"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onSignal(composer, draft);
+                setComposer(null);
+                setDraft("");
+              }}
+            >
+              <input
+                ref={draftRef}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                autoFocus
+                maxLength={80}
+                placeholder={composer === "help" ? "What do you need help with?" : "What should the others know?"}
+                className="w-44 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground/70 sm:w-56"
+              />
+              <Button type="submit" size="icon" className="h-8 w-8 shrink-0 rounded-full" aria-label="Leave the signal">
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+          )}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" className={cn("h-11 gap-2 rounded-full bg-fire-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-fire-soft/80", composer === "help" && "ring-1 ring-fire/40")} onClick={() => setComposer(composer === "help" ? null : "help")}>
               <Flame className="text-fire" /><span className="text-[11px]">Ask for help</span>
             </Button>
-            <Button variant="ghost" className="h-11 gap-2 rounded-full bg-post-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-post-soft/80" onClick={() => onSignal("reminder")}>
+            <Button variant="ghost" className={cn("h-11 gap-2 rounded-full bg-post-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-post-soft/80", composer === "reminder" && "ring-1 ring-post/40")} onClick={() => setComposer(composer === "reminder" ? null : "reminder")}>
               <BellRing className="text-post" /><span className="text-[11px]">Remind</span>
             </Button>
           </div>
+        </div>
         </div>
       )}
 
