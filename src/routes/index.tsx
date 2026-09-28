@@ -5,9 +5,11 @@ import {
   CloudSun,
   Eye,
   Flame,
+  HandHeart,
   Map as MapIcon,
   Maximize2,
   Minus,
+  PackageOpen,
   Plus,
   Sparkles,
   Star,
@@ -55,6 +57,14 @@ type Signal = {
   kind: SignalKind;
   note: string;
   position: Point;
+};
+
+type Discovery = {
+  id: string;
+  kind: "chest" | "help-task";
+  position: Point;
+  title: string;
+  note: string;
 };
 
 const viewSize = { width: 420, height: 820 };
@@ -113,6 +123,11 @@ const initialSignals: Signal[] = [
   { id: 3, from: "B", kind: "thanks", position: { x: 286, y: 165 }, note: "阿满把一颗星星挂到天上：谢谢你们刚才靠近。" },
 ];
 
+const discoveries: Discovery[] = [
+  { id: "chest-reeds", kind: "chest", position: { x: 318, y: 540 }, title: "芦苇里的小木箱", note: "里面有一枚温暖的路灯火种，可以留给下一段陌生的路。" },
+  { id: "help-maimai", kind: "help-task", position: { x: 118, y: 448 }, title: "麦麦需要一阵顺风", note: "麦麦正在草坡上寻找避风处。走到她留下的烟附近，回应这次求助。" },
+];
+
 function JourneyGame() {
   const [selected, setSelected] = useState<MemberId | null>("A");
   const [positions, setPositions] = useState(startingPositions);
@@ -122,21 +137,27 @@ function JourneyGame() {
   const [destination, setDestination] = useState<Point | null>(null);
   const [explored, setExplored] = useState<Point[]>([startingPositions.A]);
   const [weatherCleared, setWeatherCleared] = useState(false);
+  const [openedDiscovery, setOpenedDiscovery] = useState<string | null>(null);
+  const [completedDiscoveries, setCompletedDiscoveries] = useState<Set<string>>(() => new Set());
   const positionRef = useRef(startingPositions.A);
   const destinationRef = useRef<Point | null>(null);
   const selectedRef = useRef<MemberId | null>("A");
   const signalsRef = useRef(initialSignals);
   const openedSignalRef = useRef<number | null>(null);
+  const openedDiscoveryRef = useRef<string | null>(null);
+  const completedDiscoveriesRef = useRef(new Set<string>());
   const encounteredRef = useRef(new Set<number>());
 
   selectedRef.current = selected;
   signalsRef.current = signals;
   openedSignalRef.current = openedSignal;
+  openedDiscoveryRef.current = openedDiscovery;
+  completedDiscoveriesRef.current = completedDiscoveries;
 
   useEffect(() => {
     const timer = window.setInterval(() => {
       const target = destinationRef.current;
-      if (!target || selectedRef.current !== "A" || openedSignalRef.current !== null) return;
+      if (!target || selectedRef.current !== "A" || openedSignalRef.current !== null || openedDiscoveryRef.current !== null) return;
 
       const current = positionRef.current;
       const dx = target.x - current.x;
@@ -158,8 +179,20 @@ function JourneyGame() {
       setExplored((currentExplored) => {
         const last = currentExplored[currentExplored.length - 1];
         if (last && Math.hypot(next.x - last.x, next.y - last.y) < 22) return currentExplored;
-        return [...currentExplored.slice(-28), next];
+        return [...currentExplored, next];
       });
+
+      const discovery = discoveries.find((item) => {
+        if (completedDiscoveriesRef.current.has(item.id)) return false;
+        return Math.hypot(next.x - item.position.x, next.y - item.position.y) <= 30;
+      });
+
+      if (discovery) {
+        destinationRef.current = null;
+        setDestination(null);
+        setOpenedDiscovery(discovery.id);
+        return;
+      }
 
       const encountered = signalsRef.current.find((signal) => {
         if (signal.from === "A" || encounteredRef.current.has(signal.id)) return false;
@@ -233,6 +266,8 @@ function JourneyGame() {
         destination={destination}
         explored={explored}
         weatherCleared={weatherCleared}
+        openedDiscovery={openedDiscovery}
+        completedDiscoveries={completedDiscoveries}
         isCurrentPlayer={active.id === "A"}
         onBack={() => {
           destinationRef.current = null;
@@ -251,6 +286,12 @@ function JourneyGame() {
           setOpenedSignal(id);
         }}
         onCloseSignal={() => setOpenedSignal(null)}
+        onCloseDiscovery={() => setOpenedDiscovery(null)}
+        onCompleteDiscovery={(id, kind) => {
+          setCompletedDiscoveries((current) => new Set(current).add(id));
+          setOpenedDiscovery(null);
+          pushToast(kind === "chest" ? "收下了一枚路灯火种" : "已接下帮助麦麦的同行任务");
+        }}
         onReply={(text) => {
           setOpenedSignal(null);
           pushToast(text);
@@ -361,12 +402,16 @@ function MemberJourney({
   destination,
   explored,
   weatherCleared,
+  openedDiscovery,
+  completedDiscoveries,
   isCurrentPlayer,
   onBack,
   onMoveTo,
   onSignal,
   onOpenSignal,
   onCloseSignal,
+  onCloseDiscovery,
+  onCompleteDiscovery,
   onReply,
   onOpenOverview,
 }: {
@@ -378,17 +423,22 @@ function MemberJourney({
   destination: Point | null;
   explored: Point[];
   weatherCleared: boolean;
+  openedDiscovery: string | null;
+  completedDiscoveries: Set<string>;
   isCurrentPlayer: boolean;
   onBack: () => void;
   onMoveTo: (point: Point) => void;
   onSignal: (kind: SignalKind) => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
+  onCloseDiscovery: () => void;
+  onCompleteDiscovery: (id: string, kind: Discovery["kind"]) => void;
   onReply: (text: string) => void;
   onOpenOverview: () => void;
 }) {
   const open = signals.find((signal) => signal.id === openedSignal);
   const source = members.find((item) => item.id === open?.from);
+  const openDiscovery = discoveries.find((item) => item.id === openedDiscovery);
   const [zoom, setZoom] = useState(1);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef(zoom);
@@ -486,6 +536,15 @@ function MemberJourney({
             onOpen={() => onOpenSignal(signal.id)}
           />
         ))}
+        {isCurrentPlayer && discoveries.map((discovery) => (
+          <DiscoveryMarker
+            key={discovery.id}
+            discovery={discovery}
+            camera={position}
+            zoom={zoom}
+            completed={completedDiscoveries.has(discovery.id)}
+          />
+        ))}
         {isCurrentPlayer && <FogLayer camera={position} explored={explored} zoom={zoom} />}
 
         {isCurrentPlayer && destination && <DestinationMarker camera={position} destination={destination} zoom={zoom} />}
@@ -554,6 +613,27 @@ function MemberJourney({
           </section>
         </div>
       )}
+
+      {openDiscovery && (
+        <div className="absolute inset-0 z-[60] flex items-end bg-overlay p-4 sm:items-center sm:justify-center" onClick={onCloseDiscovery}>
+          <section className="w-full rounded-2xl bg-surface p-5 shadow-dock sm:max-w-sm" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-4 flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-signal/45 text-signal-foreground">
+                {openDiscovery.kind === "chest" ? <PackageOpen /> : <HandHeart />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold text-muted-foreground">迷雾之下的新发现</p>
+                <h2 className="font-display text-lg font-semibold">{openDiscovery.title}</h2>
+              </div>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseDiscovery} aria-label="关闭发现"><X /></Button>
+            </div>
+            <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{openDiscovery.note}</p>
+            <Button className="w-full" onClick={() => onCompleteDiscovery(openDiscovery.id, openDiscovery.kind)}>
+              {openDiscovery.kind === "chest" ? "收下火种" : "接下任务"}
+            </Button>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
@@ -619,20 +699,31 @@ function WeatherLayer({ member, cleared }: { member: Member; cleared: boolean })
 }
 
 function FogLayer({ camera, explored, zoom }: { camera: Point; explored: Point[]; zoom: number }) {
+  const width = viewSize.width / zoom;
+  const height = viewSize.height / zoom;
+  const viewBox = `${camera.x - width / 2} ${camera.y - height / 2} ${width} ${height}`;
   return (
-    <svg className="fog-layer pointer-events-none absolute inset-0 z-20 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <svg className="fog-layer pointer-events-none absolute inset-0 z-[35] h-full w-full" viewBox={viewBox} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
         <mask id="explored-fog-mask">
-          <rect width="100" height="100" fill="white" />
-          {explored.map((point, index) => {
-            const screen = toScreen(point, camera, zoom);
-            return <circle key={`${point.x}-${point.y}-${index}`} cx={screen.x} cy={screen.y} r={index === explored.length - 1 ? 22 : 15} fill="black" />;
-          })}
-          <circle cx="50" cy="50" r="25" fill="black" />
+          <rect x={camera.x - 1200} y={camera.y - 1600} width="2400" height="3200" fill="white" />
+          {explored.map((point, index) => <circle key={`${point.x}-${point.y}-${index}`} cx={point.x} cy={point.y} r="72" fill="black" />)}
+          <circle cx={startingPositions.A.x} cy={startingPositions.A.y} r="92" fill="black" />
         </mask>
       </defs>
-      <rect width="100" height="100" mask="url(#explored-fog-mask)" />
+      <rect x={camera.x - 1200} y={camera.y - 1600} width="2400" height="3200" mask="url(#explored-fog-mask)" />
     </svg>
+  );
+}
+
+function DiscoveryMarker({ discovery, camera, zoom, completed }: { discovery: Discovery; camera: Point; zoom: number; completed: boolean }) {
+  if (completed) return null;
+  const screen = toScreen(discovery.position, camera, zoom);
+  if (screen.x < -15 || screen.x > 115 || screen.y < -15 || screen.y > 115) return null;
+  return (
+    <span className="discovery-marker pointer-events-none absolute z-30 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface text-signal-foreground shadow-signal" style={{ left: `${screen.x}%`, top: `${screen.y}%` }} aria-hidden="true">
+      {discovery.kind === "chest" ? <PackageOpen className="h-5 w-5" /> : <HandHeart className="h-5 w-5" />}
+    </span>
   );
 }
 
@@ -640,7 +731,7 @@ function DestinationMarker({ camera, destination, zoom }: { camera: Point; desti
   const screen = toScreen(destination, camera, zoom);
   return (
     <span
-      className="destination-marker pointer-events-none absolute z-20 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/55"
+      className="destination-marker pointer-events-none absolute z-40 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/55"
       style={{ left: `${screen.x}%`, top: `${screen.y}%` }}
       aria-hidden="true"
     />
