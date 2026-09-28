@@ -27,10 +27,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "同行 · 四人协作旅程" },
-      { name: "description", content: "四个人沿不同路线前行，在彼此的地图上发现同行者留下的痕迹。" },
-      { property: "og:title", content: "同行 · 四人协作旅程" },
-      { property: "og:description", content: "沿不同的路，看见彼此留下的篝火、风铃、星光与云开的痕迹，一起抵达营地。" },
+      { title: "Together · A Four-Person Journey" },
+      { name: "description", content: "Four people travel different routes and discover the traces their companions leave on each other's maps." },
+      { property: "og:title", content: "Together · A Four-Person Journey" },
+      { property: "og:description", content: "Walk different paths, notice each other's campfires, wind chimes, stars and clearing skies, and reach camp together." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -75,8 +75,8 @@ const maxZoom = 2.4;
 const members: Member[] = [
   {
     id: "A",
-    name: "小屿",
-    region: "苔原浅滩",
+    name: "Isla",
+    region: "Tundra Shallows",
     color: "bg-player-a",
     theme: "map-theme-a",
     route: "M198 820 C105 746 122 656 221 632 C323 608 322 489 208 466 C98 444 87 332 184 294 C270 259 280 139 218 0",
@@ -84,8 +84,8 @@ const members: Member[] = [
   },
   {
     id: "B",
-    name: "阿满",
-    region: "蓝溪河道",
+    name: "Mako",
+    region: "Bluebrook River",
     color: "bg-player-b",
     theme: "map-theme-b",
     route: "M105 820 C250 767 298 686 186 622 C82 562 128 472 274 432 C357 410 307 298 172 278 C73 262 120 121 215 0",
@@ -93,8 +93,8 @@ const members: Member[] = [
   },
   {
     id: "C",
-    name: "禾子",
-    region: "高风山脊",
+    name: "Hana",
+    region: "Windy Ridge",
     color: "bg-player-c",
     theme: "map-theme-c",
     route: "M302 820 C182 744 115 691 204 609 C300 522 289 440 175 414 C65 388 86 270 220 236 C302 215 295 93 226 0",
@@ -102,8 +102,8 @@ const members: Member[] = [
   },
   {
     id: "D",
-    name: "麦麦",
-    region: "暖草坡地",
+    name: "Mimi",
+    region: "Warm Meadow",
     color: "bg-player-d",
     theme: "map-theme-d",
     route: "M118 820 C71 726 197 682 279 629 C356 579 291 483 163 455 C49 430 106 318 235 283 C338 255 299 119 216 0",
@@ -119,14 +119,14 @@ const startingPositions: Record<MemberId, Point> = {
 };
 
 const initialSignals: Signal[] = [
-  { id: 1, from: "B", kind: "reminder", position: { x: 238, y: 307 }, note: "河道边挂起一串风铃：转弯处有一阵顺风。" },
-  { id: 2, from: "D", kind: "help", position: { x: 164, y: 530 }, note: "草坡背风处升起烟，麦麦在这里需要一点照应。" },
-  { id: 3, from: "B", kind: "thanks", position: { x: 286, y: 165 }, note: "阿满把一颗星星挂到天上：谢谢你们刚才靠近。" },
+  { id: 1, from: "B", kind: "reminder", position: { x: 238, y: 307 }, note: "A string of wind chimes by the river: there's a tailwind at the bend." },
+  { id: 2, from: "D", kind: "help", position: { x: 164, y: 530 }, note: "Smoke rises on the sheltered slope — Mimi could use a hand here." },
+  { id: 3, from: "B", kind: "thanks", position: { x: 286, y: 165 }, note: "Mako hung a star in the sky: thanks for coming close earlier." },
 ];
 
 const discoveries: Discovery[] = [
-  { id: "chest-reeds", kind: "chest", position: { x: 318, y: 540 }, title: "芦苇里的小木箱", note: "里面有一枚温暖的路灯火种，可以留给下一段陌生的路。" },
-  { id: "help-maimai", kind: "help-task", position: { x: 118, y: 448 }, title: "麦麦需要一阵顺风", note: "麦麦正在草坡上寻找避风处。走到她留下的烟附近，回应这次求助。" },
+  { id: "chest-reeds", kind: "chest", position: { x: 318, y: 540 }, title: "A little crate in the reeds", note: "Inside is a warm lantern ember, saved for the next unfamiliar stretch." },
+  { id: "help-maimai", kind: "help-task", position: { x: 118, y: 448 }, title: "Mimi needs a tailwind", note: "Mimi is looking for shelter on the meadow. Walk to her smoke to answer the call." },
 ];
 
 function JourneyGame() {
@@ -230,18 +230,18 @@ function JourneyGame() {
         from: "A",
         kind,
         position: current,
-        note: "我们绕开了刚才的难点，云层慢慢打开，路面亮了起来。",
+        note: "We got around the tricky part — the clouds are parting and the path is brighter.",
       };
       const thanks: Signal = {
         id: Date.now() + 1,
         from: "B",
         kind: "thanks",
         position: { x: current.x + 64, y: current.y - 118 },
-        note: "阿满在天空挂起一颗星：谢谢你把这段路照亮。",
+        note: "Mako hung a star in the sky: thanks for lighting up this stretch.",
       };
       setWeatherCleared(true);
       setSignals((currentSignals) => [thanks, resolved, ...currentSignals]);
-      pushToast("云雾从 A 与 B 的地图上散开，B 的星星也亮起来");
+      pushToast("The mist lifts on A's and B's maps, and B's star lights up");
       return;
     }
 
@@ -250,10 +250,10 @@ function JourneyGame() {
       from: "A",
       kind,
       position: current,
-      note: kind === "help" ? "前面的路有些难，我先在这里燃一簇火。" : "我在这里挂起风铃：前方转向时，记得听风。",
+      note: kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns.",
     };
     setSignals((currentSignals) => [signal, ...currentSignals]);
-    pushToast(kind === "help" ? "A 的火会在 B 的地图里化成远处烟雾" : "风铃会在 B 的路上变成可以看见的风");
+    pushToast(kind === "help" ? "A's fire will appear as distant smoke on B's map" : "The chime will become visible wind on B's path");
   };
 
   if (active) {
@@ -291,7 +291,7 @@ function JourneyGame() {
         onCompleteDiscovery={(id, kind) => {
           setCompletedDiscoveries((current) => new Set(current).add(id));
           setOpenedDiscovery(null);
-          pushToast(kind === "chest" ? "收下了一枚路灯火种" : "已接下帮助麦麦的同行任务");
+          pushToast(kind === "chest" ? "Picked up a lantern ember" : "Accepted the task to help Mimi");
         }}
         onReply={(text) => {
           setOpenedSignal(null);
@@ -324,13 +324,13 @@ function Overview({
       <div className="mx-auto max-w-5xl">
         <header className="mb-5 flex items-end justify-between sm:mb-7">
           <div>
-            <p className="mb-1 text-xs font-semibold text-muted-foreground">第 03 天 · 四条路，一处营地</p>
-            <h1 className="font-display text-3xl font-semibold sm:text-4xl">四个人正在靠近同一个终点</h1>
+            <p className="mb-1 text-xs font-semibold text-muted-foreground">Day 03 · Four paths, one camp</p>
+            <h1 className="font-display text-3xl font-semibold sm:text-4xl">Four people, heading to the same place</h1>
           </div>
-          <p className="hidden text-xs text-muted-foreground sm:block">点击地图，查看每个人的路途</p>
+          <p className="hidden text-xs text-muted-foreground sm:block">Tap a map to see each journey</p>
         </header>
 
-        <section className="relative overflow-hidden rounded-3xl border border-border bg-map p-2 shadow-map sm:p-3" aria-label="四人路线总览">
+        <section className="relative overflow-hidden rounded-3xl border border-border bg-map p-2 shadow-map sm:p-3" aria-label="Overview of all four routes">
           <div className="grid grid-cols-2 gap-1.5 overflow-hidden rounded-2xl bg-border/60 sm:gap-2">
             {members.map((member, index) => {
               const latest = signals.find((signal) => signal.from === member.id || signal.kind === "thanks");
@@ -347,7 +347,7 @@ function Overview({
                   <OverviewMap member={member} position={positions[member.id]} quadrant={index} />
                   <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full bg-surface/85 py-1 pl-1 pr-3 shadow-soft backdrop-blur sm:left-5 sm:top-5">
                     <span className={cn("grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-player-ink", member.color)}>{member.id}</span>
-                    <span className="text-xs font-semibold text-foreground">{member.name}{member.id === "A" ? " · 你" : ""}</span>
+                    <span className="text-xs font-semibold text-foreground">{member.name}{member.id === "A" ? " · You" : ""}</span>
                   </div>
                   <p className="absolute bottom-3 left-3 z-10 text-[10px] font-medium text-foreground/70 sm:bottom-5 sm:left-5">{member.region}</p>
                   {latest && (
@@ -362,13 +362,13 @@ function Overview({
 
           <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-[7px] border-map bg-surface text-primary shadow-map sm:h-24 sm:w-24">
             <TentTree className="h-6 w-6 sm:h-7 sm:w-7" />
-            <span className="mt-1 text-[9px] font-bold text-foreground">共同营地</span>
+            <span className="mt-1 text-[9px] font-bold text-foreground">Shared camp</span>
           </div>
         </section>
 
         <footer className="mt-5 flex items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>右下角浮标可以从个人地图回到这里。</p>
-          <Button variant="secondary" className="shrink-0 rounded-full" onClick={() => onSelect("A")}>回到 A</Button>
+          <p>Use the button at the bottom right of your map to come back here.</p>
+          <Button variant="secondary" className="shrink-0 rounded-full" onClick={() => onSelect("A")}>Back to A</Button>
         </footer>
       </div>
     </main>
@@ -379,7 +379,7 @@ function OverviewMap({ member, position, quadrant }: { member: Member; position:
   const markerX = quadrant % 2 === 0 ? 24 + (position.x % 100) * 1.7 : 236 - (position.x % 100) * 1.7;
   const markerY = quadrant < 2 ? 18 + (position.y % 100) * 1.9 : 204 - (position.y % 100) * 1.9;
   return (
-    <svg className="h-full w-full" viewBox="0 0 260 220" role="img" aria-label={`${member.name}的${member.region}路线`}>
+    <svg className="h-full w-full" viewBox="0 0 260 220" role="img" aria-label={`${member.name}'s route through ${member.region}`}>
       {member.id === "A" && <path d="M-10 68 C55 35 86 82 145 58 C193 38 226 50 274 21" fill="none" stroke="var(--member-water)" strokeWidth="15" opacity=".72" />}
       {member.id === "B" && <path d="M62 -8 C87 42 39 74 79 115 C118 155 75 188 97 230" fill="none" stroke="var(--member-water)" strokeWidth="24" opacity=".82" />}
       {member.id === "C" && <g fill="none" stroke="var(--member-detail)" opacity=".5"><path d="M3 56 Q65 17 126 53 T264 42"/><path d="M-4 82 Q72 43 133 79 T266 67"/><path d="M0 172 Q59 135 120 165 T265 154"/></g>}
@@ -470,13 +470,13 @@ function MemberJourney({
         {isCurrentPlayer ? (
           <span className="h-10 w-10" aria-hidden="true" />
         ) : (
-          <Button variant="secondary" size="icon" className="rounded-full bg-surface/90 shadow-soft backdrop-blur" onClick={onBack} aria-label="返回四人路线总览">
+          <Button variant="secondary" size="icon" className="rounded-full bg-surface/90 shadow-soft backdrop-blur" onClick={onBack} aria-label="返回Overview of all four routes">
             <ArrowLeft />
           </Button>
         )}
         <div className="min-w-0 text-center">
           <p className="truncate text-sm font-semibold">{member.name} · {member.region}</p>
-          <p className="text-[10px] text-muted-foreground">{isCurrentPlayer ? (destination ? "正在穿过迷雾" : "长按地图，走向新的地方") : "正在查看伙伴的路途"}</p>
+          <p className="text-[10px] text-muted-foreground">{isCurrentPlayer ? (destination ? "Walking through the mist" : "Long-press the map to walk somewhere new") : "Viewing a companion's journey"}</p>
         </div>
         <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold text-player-ink", member.color)}>{member.id}</div>
       </header>
@@ -484,7 +484,7 @@ function MemberJourney({
       <div
         ref={mapRef}
         className={cn("journey-map absolute inset-0 touch-none", isCurrentPlayer && "cursor-crosshair")}
-        aria-label={`${member.name}的个人地图`}
+        aria-label={`${member.name}'s map`}
         onContextMenu={(event) => event.preventDefault()}
         onPointerDown={(event) => {
           const map = event.currentTarget;
@@ -559,18 +559,18 @@ function MemberJourney({
       </div>
 
       <div className="absolute left-4 top-[22%] z-50 flex flex-col overflow-hidden rounded-full border border-border bg-surface/95 shadow-soft backdrop-blur">
-        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(1.25)} disabled={zoom >= maxZoom} aria-label="放大地图" title="放大地图">
+        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(1.25)} disabled={zoom >= maxZoom} aria-label="Zoom in" title="Zoom in">
           <Plus />
         </Button>
-        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(0.8)} disabled={zoom <= minZoom} aria-label="缩小地图" title="缩小地图">
+        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(0.8)} disabled={zoom <= minZoom} aria-label="Zoom out" title="Zoom out">
           <Minus />
         </Button>
-        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => setZoom(minZoom)} disabled={zoom === minZoom} aria-label="查看地图全景" title="查看地图全景">
+        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => setZoom(minZoom)} disabled={zoom === minZoom} aria-label="Show full map" title="Show full map">
           <Maximize2 />
         </Button>
       </div>
 
-      <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="进入四人路线总览">
+      <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="进入Overview of all four routes">
         <MapIcon />
       </Button>
 
@@ -579,18 +579,18 @@ function MemberJourney({
         {isCurrentPlayer ? (
           <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-surface/95 p-3 shadow-dock backdrop-blur-md">
             <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-fire-soft text-foreground hover:bg-fire-soft/80" onClick={() => onSignal("help")}>
-              <Flame className="text-fire" /><span className="text-[11px]">发出求助</span>
+              <Flame className="text-fire" /><span className="text-[11px]">Ask for help</span>
             </Button>
             <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-post-soft text-foreground hover:bg-post-soft/80" onClick={() => onSignal("reminder")}>
-              <BellRing className="text-post" /><span className="text-[11px]">提出提醒</span>
+              <BellRing className="text-post" /><span className="text-[11px]">Remind</span>
             </Button>
             <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-signal/35 text-foreground hover:bg-signal/45" onClick={() => onSignal("resolve")}>
-              <CloudSun className="text-primary" /><span className="text-[11px]">完成求助</span>
+              <CloudSun className="text-primary" /><span className="text-[11px]">Resolved</span>
             </Button>
           </div>
         ) : (
           <div className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface/92 px-4 py-3 text-xs text-muted-foreground shadow-dock backdrop-blur-md">
-            <Eye className="h-4 w-4" />这是 {member.name} 的路，你可以观察沿途痕迹
+            <Eye className="h-4 w-4" />This is {member.name}'s path — look around at the traces along the way
           </div>
         )}
       </div>
@@ -601,16 +601,16 @@ function MemberJourney({
             <div className="mb-5 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
               <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-player-ink", source.color)}>{source.id}</div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold">这是 {source.name} 留下的痕迹</p>
+                <p className="text-sm font-semibold">A trace left by {source.name}</p>
                 <p className="text-xs text-muted-foreground">{effectCopy(open.kind, member.id, source.id)}</p>
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseSignal} aria-label="关闭"><X /></Button>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseSignal} aria-label="Close"><X /></Button>
             </div>
             <p className="mb-5 font-display text-xl leading-relaxed">“{open.note}”</p>
             {isCurrentPlayer && (
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="secondary" onClick={() => onReply(`已让${source.name}知道：我看见了`)}>我看见了</Button>
-                <Button onClick={() => onReply(`为${source.name}留下一颗星`)}>留一颗星</Button>
+                <Button variant="secondary" onClick={() => onReply(`Let ${source.name} know you saw it`)}>I see it</Button>
+                <Button onClick={() => onReply(`Left a star for ${source.name}`)}>Leave a star</Button>
               </div>
             )}
           </section>
@@ -625,14 +625,14 @@ function MemberJourney({
                 {openDiscovery.kind === "chest" ? <PackageOpen /> : <HandHeart />}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold text-muted-foreground">迷雾之下的新发现</p>
+                <p className="text-[10px] font-semibold text-muted-foreground">Found beneath the mist</p>
                 <h2 className="font-display text-lg font-semibold">{openDiscovery.title}</h2>
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseDiscovery} aria-label="关闭发现"><X /></Button>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseDiscovery} aria-label="Close discovery"><X /></Button>
             </div>
             <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{openDiscovery.note}</p>
             <Button className="w-full" onClick={() => onCompleteDiscovery(openDiscovery.id, openDiscovery.kind)}>
-              {openDiscovery.kind === "chest" ? "收下火种" : "接下任务"}
+              {openDiscovery.kind === "chest" ? "Take the ember" : "Accept task"}
             </Button>
           </section>
         </div>
@@ -737,7 +737,7 @@ function MappedSignal({ signal, viewer, camera, zoom, index, onOpen }: { signal:
       onClick={onOpen}
       className={cn("signal-marker absolute z-30 h-auto w-auto -translate-x-1/2 -translate-y-1/2 rounded-full p-0 hover:bg-transparent", index > 3 && "opacity-80")}
       style={{ left: `${screen.x}%`, top: `${screen.y}%` }}
-      aria-label={`查看${signal.from}在这张地图留下的痕迹`}
+      aria-label={`View the trace ${signal.from} left on this map`}
     >
       {isSmoke ? (
         <span className="smoke-trace relative flex flex-col items-center text-signal-foreground">
@@ -747,7 +747,7 @@ function MappedSignal({ signal, viewer, camera, zoom, index, onOpen }: { signal:
         </span>
       ) : isWind ? (
         <span className="wind-current relative flex items-center gap-1.5 rounded-full bg-post-soft/90 px-3 py-2 text-[10px] font-semibold text-post shadow-soft backdrop-blur">
-          <Wind className="h-4 w-4" />风铃的风
+          <Wind className="h-4 w-4" />Chime wind
         </span>
       ) : isCloudClear ? (
         <span className="cloud-clear-marker grid h-12 w-12 place-items-center rounded-full bg-surface/85 text-primary shadow-signal backdrop-blur">
@@ -761,7 +761,7 @@ function MappedSignal({ signal, viewer, camera, zoom, index, onOpen }: { signal:
         <span className="chime-sway grid h-11 w-11 place-items-center rounded-full bg-post-soft text-post shadow-signal"><BellRing className="h-5 w-5" /></span>
       ) : (
         <span className="relative flex items-center gap-1.5 rounded-full bg-post-soft/90 px-3 py-2 text-[10px] font-semibold text-post shadow-soft backdrop-blur">
-          <Waves className="h-4 w-4" /><SignalIcon kind={signal.kind} className="h-4 w-4" />同行痕迹
+          <Waves className="h-4 w-4" /><SignalIcon kind={signal.kind} className="h-4 w-4" />Companion trace
         </span>
       )}
     </Button>
@@ -776,11 +776,11 @@ function SignalIcon({ kind, className }: { kind: SignalKind; className?: string 
 }
 
 function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
-  if (kind === "help" && viewer === "B") return "A 的火在 B 的地图里变成烟";
-  if (kind === "resolve" && (viewer === "A" || viewer === "B")) return "云雾拨开，阴天变晴";
-  if (kind === "reminder" && viewer === "B") return "风铃在 B 的路上变成风";
-  if (kind === "thanks") return `${source} 挂起的星星，所有人都能看见`;
-  return "它在你的地貌里换了一种模样";
+  if (kind === "help" && viewer === "B") return "A's fire becomes smoke on B's map";
+  if (kind === "resolve" && (viewer === "A" || viewer === "B")) return "The mist parts and the sky clears";
+  if (kind === "reminder" && viewer === "B") return "The chime becomes wind on B's path";
+  if (kind === "thanks") return `A star hung by ${source}, visible to everyone`;
+  return "It takes a different shape in your landscape";
 }
 
 function toScreen(point: Point, camera: Point, zoom = 1) {
