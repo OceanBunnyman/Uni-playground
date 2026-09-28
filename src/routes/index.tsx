@@ -327,7 +327,6 @@ function Overview({
         <section className="relative overflow-hidden rounded-3xl border border-border bg-map p-2 shadow-map sm:p-3" aria-label="Overview of all four routes">
           <div className="grid grid-cols-2 gap-1.5 overflow-hidden rounded-2xl bg-border/60 sm:gap-2">
             {members.map((member, index) => {
-              const latest = signals.find((signal) => signal.from === member.id);
               return (
                 <Button
                   key={member.id}
