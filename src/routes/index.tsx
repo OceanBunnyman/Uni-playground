@@ -495,7 +495,6 @@ function MemberJourney({
     return () => map.removeEventListener("wheel", handleWheel);
   }, []);
 
-  const changeZoom = (factor: number) => zoomAt(zoomRef.current * factor);
 
   return (
     <main className={cn("relative mx-auto min-h-dvh max-w-3xl overflow-hidden text-foreground sm:my-6 sm:min-h-[calc(100vh-3rem)] sm:rounded-3xl sm:border sm:border-border sm:shadow-map", member.theme)}>
