@@ -707,7 +707,7 @@ function MemberJourney({
               <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseDiscovery} aria-label="Close discovery"><X /></Button>
             </div>
             <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{openDiscovery.note}</p>
-            <Button className="w-full" onClick={() => onCompleteDiscovery(openDiscovery.id, openDiscovery.kind)}>
+            <Button className="w-full" onClick={() => onCompleteDiscovery(openDiscovery.id)}>
               Open chest
             </Button>
           </section>
