@@ -711,7 +711,7 @@ function MemberJourney({
             {isCurrentPlayer && (
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="secondary" onClick={() => onReply(`Let ${source.name} know you saw it`)}>I see it</Button>
-                <Button onClick={onResolve}><CloudSun className="h-4 w-4" />Resolved</Button>
+                <Button onClick={() => onResolve(open.id)}><CloudSun className="h-4 w-4" />Resolved</Button>
               </div>
             )}
           </section>
