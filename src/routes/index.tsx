@@ -1,9 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowDown,
   ArrowLeft,
-  ArrowRight,
-  ArrowUp,
   Eye,
   Flame,
   Signpost,
@@ -12,7 +9,7 @@ import {
   Wind,
   X,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -141,12 +138,12 @@ function JourneyGame() {
           setSelected(null);
           setOpenedSignal(null);
         }}
-        onMove={(dx, dy) =>
+        onMoveTo={(point) =>
           setPositions((current) => ({
             ...current,
             A: {
-              x: Math.min(90, Math.max(10, current.A.x + dx)),
-              y: Math.min(88, Math.max(12, current.A.y + dy)),
+              x: Math.min(94, Math.max(6, point.x)),
+              y: Math.min(92, Math.max(10, point.y)),
             },
           }))
         }
@@ -257,7 +254,7 @@ function MemberJourney({
   toast,
   isCurrentPlayer,
   onBack,
-  onMove,
+  onMoveTo,
   onSignal,
   onOpenSignal,
   onCloseSignal,
@@ -270,7 +267,7 @@ function MemberJourney({
   toast: string;
   isCurrentPlayer: boolean;
   onBack: () => void;
-  onMove: (dx: number, dy: number) => void;
+  onMoveTo: (point: Point) => void;
   onSignal: (kind: SignalKind) => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
@@ -292,7 +289,26 @@ function MemberJourney({
         <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold text-player-ink", member.color)}>{member.id}</div>
       </header>
 
-      <div className="journey-map absolute inset-0" aria-label={`${member.name}的个人地图`}>
+      <div
+        className={cn("journey-map absolute inset-0", isCurrentPlayer && "touch-none cursor-crosshair")}
+        aria-label={`${member.name}的个人地图`}
+        onPointerDown={(event) => {
+          if (!isCurrentPlayer || event.button !== 0 || (event.target as Element).closest("button")) return;
+          const map = event.currentTarget;
+          const pointerId = event.pointerId;
+          const timer = window.setTimeout(() => {
+            const bounds = map.getBoundingClientRect();
+            onMoveTo({
+              x: ((event.clientX - bounds.left) / bounds.width) * 100,
+              y: ((event.clientY - bounds.top) / bounds.height) * 100,
+            });
+          }, 420);
+          map.dataset["longPressTimer"] = String(timer);
+        }}
+        onPointerUp={(event) => clearLongPress(event.currentTarget)}
+        onPointerCancel={(event) => clearLongPress(event.currentTarget)}
+        onPointerLeave={(event) => clearLongPress(event.currentTarget)}
+      >
         <PersonalLandscape member={member} />
         {signals.slice(0, 3).map((signal, index) => (
           <MappedSignal
@@ -325,7 +341,9 @@ function MemberJourney({
                 <Signpost className="text-post" /><span className="text-[11px]">埋下木桩</span>
               </Button>
             </div>
-            <DirectionPad onMove={onMove} />
+            <div className="flex h-14 w-24 shrink-0 items-center justify-center rounded-xl bg-secondary/75 px-2 text-center text-[10px] leading-relaxed text-muted-foreground">
+              长按地图<br />移动到该处
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface/92 px-4 py-3 text-xs text-muted-foreground shadow-dock backdrop-blur-md">
@@ -427,50 +445,8 @@ function MappedSignal({ signal, viewer, index, onOpen }: { signal: Signal; viewe
   );
 }
 
-function DirectionPad({ onMove }: { onMove: (dx: number, dy: number) => void }) {
-  const intervalRef = useRef<number | null>(null);
-
-  const stop = () => {
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  const start = (dx: number, dy: number) => {
-    stop();
-    onMove(dx, dy);
-    intervalRef.current = window.setInterval(() => onMove(dx, dy), 90);
-  };
-
-  const directions = [
-    { label: "向上走", icon: ArrowUp, dx: 0, dy: -1.6, className: "col-start-2 row-start-1" },
-    { label: "向左走", icon: ArrowLeft, dx: -1.6, dy: 0, className: "col-start-1 row-start-2" },
-    { label: "向下走", icon: ArrowDown, dx: 0, dy: 1.6, className: "col-start-2 row-start-2" },
-    { label: "向右走", icon: ArrowRight, dx: 1.6, dy: 0, className: "col-start-3 row-start-2" },
-  ];
-
-  return (
-    <div className="grid h-[4.75rem] w-[7.25rem] shrink-0 grid-cols-3 grid-rows-2 gap-1" aria-label="移动方向">
-      {directions.map(({ label, icon: Icon, dx, dy, className }) => (
-        <Button
-          key={label}
-          variant="secondary"
-          size="icon"
-          className={cn("h-9 w-9 rounded-full bg-secondary/90", className)}
-          aria-label={label}
-          onPointerDown={(event) => {
-            event.currentTarget.setPointerCapture(event.pointerId);
-            start(dx, dy);
-          }}
-          onPointerUp={stop}
-          onPointerCancel={stop}
-          onLostPointerCapture={stop}
-          onContextMenu={(event) => event.preventDefault()}
-        >
-          <Icon className="h-4 w-4" />
-        </Button>
-      ))}
-    </div>
-  );
+function clearLongPress(element: HTMLElement) {
+  const timer = Number(element.dataset["longPressTimer"]);
+  if (Number.isFinite(timer)) window.clearTimeout(timer);
+  delete element.dataset["longPressTimer"];
 }
