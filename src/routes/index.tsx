@@ -423,6 +423,7 @@ function MemberJourney({
   onMoveTo: (point: Point) => void;
   onSignal: (kind: SignalKind, note?: string, to?: MemberId[]) => void;
   onResolve: (signalId: number) => void;
+  onHelp: (signalId: number) => void;
   onRead: (signalId: number) => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
@@ -708,8 +709,14 @@ function MemberJourney({
               <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseSignal} aria-label="Close"><X /></Button>
             </div>
             <p className="mb-5 font-display text-xl leading-relaxed">“{open.note}”</p>
-            {open.kind === "help" && !open.resolved && open.from !== member.id && (
+            {open.kind === "help" && !open.resolved && !open.helped && open.from === member.id && (
               <Button className="w-full" onClick={() => onResolve(open.id)}>Mark as resolved</Button>
+            )}
+            {open.kind === "help" && !open.resolved && !open.helped && open.from !== member.id && (
+              <div className="grid grid-cols-2 gap-3">
+                <Button className="w-full" onClick={() => onHelp(open.id)}>I can help</Button>
+                <Button variant="outline" className="w-full" onClick={onCloseSignal}>Later</Button>
+              </div>
             )}
             {open.kind === "reminder" && !open.read && open.from !== member.id && (
               <Button className="w-full" onClick={() => onRead(open.id)}>Mark as read</Button>
@@ -814,7 +821,7 @@ function MappedSignal({ signal, viewer, camera, zoom, viewport, index, onOpen }:
   const screen = toScreen(signal.position, camera, zoom, viewport);
   if (screen.x < -18 || screen.x > 118 || screen.y < -18 || screen.y > 118) return null;
   const isOwn = viewer === signal.from;
-  const isChanged = signal.kind === "help" ? signal.resolved : signal.read;
+  const isChanged = signal.kind === "help" ? Boolean(signal.resolved || signal.helped) : signal.read;
   const Icon = signal.kind === "help" ? Flame : BellRing;
 
   return (
