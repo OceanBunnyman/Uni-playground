@@ -327,7 +327,6 @@ function Overview({
         <section className="relative overflow-hidden rounded-3xl border border-border bg-map p-2 shadow-map sm:p-3" aria-label="Overview of all four routes">
           <div className="grid grid-cols-2 gap-1.5 overflow-hidden rounded-2xl bg-border/60 sm:gap-2">
             {members.map((member, index) => {
-              const latest = signals.find((signal) => signal.from === member.id);
               return (
                 <Button
                   key={member.id}
@@ -344,11 +343,6 @@ function Overview({
                     <span className="text-xs font-semibold text-foreground">{member.name}{member.id === "A" ? " · You" : ""}</span>
                   </div>
                   <p className="absolute bottom-3 left-3 z-10 text-[10px] font-medium text-foreground/70 sm:bottom-5 sm:left-5">{member.region}</p>
-                  {latest && (
-                    <span className="absolute bottom-3 right-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-signal text-signal-foreground shadow-signal sm:bottom-5 sm:right-5">
-                      <SignalIcon kind={latest.kind} className="h-4 w-4" />
-                    </span>
-                  )}
                 </Button>
               );
             })}
