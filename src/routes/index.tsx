@@ -448,7 +448,9 @@ function MemberJourney({
   const pinchDistanceRef = useRef<number | null>(null);
 
   zoomRef.current = zoom;
-  const basePosition = isCurrentPlayer ? position : startingPositions[member.id];
+  // Keep the camera anchored in world space while the player walks. The player
+  // moves across the map; landscape details and traces stay at their coordinates.
+  const basePosition = startingPositions[member.id];
   const camera = { x: basePosition.x + offset.x, y: basePosition.y + offset.y };
   const baseRef = useRef(basePosition);
   baseRef.current = basePosition;
@@ -534,8 +536,8 @@ function MemberJourney({
             const bounds = map.getBoundingClientRect();
             const currentZoom = zoomRef.current;
             onMoveTo({
-              x: position.x + offsetRef.current.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (viewSize.width / currentZoom),
-              y: position.y + offsetRef.current.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (viewSize.height / currentZoom),
+              x: baseRef.current.x + offsetRef.current.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (viewSize.width / currentZoom),
+              y: baseRef.current.y + offsetRef.current.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (viewSize.height / currentZoom),
             });
           }, 420);
           map.dataset["longPressTimer"] = String(timer);
@@ -587,7 +589,7 @@ function MemberJourney({
 
         {isCurrentPlayer && destination && <DestinationMarker camera={camera} destination={destination} zoom={zoom} />}
 
-        <div className="player-piece absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${toScreen(basePosition, camera, zoom).x}%`, top: `${toScreen(basePosition, camera, zoom).y}%` }}>
+        <div className="player-piece absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${toScreen(isCurrentPlayer ? position : basePosition, camera, zoom).x}%`, top: `${toScreen(isCurrentPlayer ? position : basePosition, camera, zoom).y}%` }}>
           <span className="absolute -inset-3 rounded-full border border-foreground/10 bg-surface/45" />
           <span className={cn("relative grid h-11 w-11 place-items-center rounded-full border-2 border-surface text-xs font-bold text-player-ink shadow-player", member.color)}>{member.id}</span>
         </div>
