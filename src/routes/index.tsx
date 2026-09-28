@@ -6,6 +6,9 @@ import {
   Eye,
   Flame,
   Map,
+  Maximize2,
+  Minus,
+  Plus,
   Sparkles,
   Star,
   TentTree,
@@ -55,6 +58,8 @@ type Signal = {
 };
 
 const viewSize = { width: 420, height: 820 };
+const minZoom = 0.55;
+const maxZoom = 2.4;
 
 const members: Member[] = [
   {
@@ -384,6 +389,29 @@ function MemberJourney({
 }) {
   const open = signals.find((signal) => signal.id === openedSignal);
   const source = members.find((item) => item.id === open?.from);
+  const [zoom, setZoom] = useState(1);
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const zoomRef = useRef(zoom);
+  const pointersRef = useRef(new Map<number, Point>());
+  const pinchDistanceRef = useRef<number | null>(null);
+
+  zoomRef.current = zoom;
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1);
+      setZoom((current) => clampZoom(current * Math.exp(-delta * 0.0015)));
+    };
+
+    map.addEventListener("wheel", handleWheel, { passive: false });
+    return () => map.removeEventListener("wheel", handleWheel);
+  }, []);
+
+  const changeZoom = (factor: number) => setZoom((current) => clampZoom(current * factor));
 
   return (
     <main className={cn("relative mx-auto min-h-dvh max-w-3xl overflow-hidden text-foreground sm:my-6 sm:min-h-[calc(100vh-3rem)] sm:rounded-3xl sm:border sm:border-border sm:shadow-map", member.theme)}>
@@ -403,25 +431,47 @@ function MemberJourney({
       </header>
 
       <div
-        className={cn("journey-map absolute inset-0", isCurrentPlayer && "touch-none cursor-crosshair")}
+        ref={mapRef}
+        className={cn("journey-map absolute inset-0 touch-none", isCurrentPlayer && "cursor-crosshair")}
         aria-label={`${member.name}的个人地图`}
         onPointerDown={(event) => {
-          if (!isCurrentPlayer || event.button !== 0 || (event.target as Element).closest("button")) return;
           const map = event.currentTarget;
+          pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          map.setPointerCapture(event.pointerId);
+          if (pointersRef.current.size > 1) {
+            clearLongPress(map);
+            const points = [...pointersRef.current.values()];
+            pinchDistanceRef.current = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+            return;
+          }
+          if (!isCurrentPlayer || event.button !== 0 || (event.target as Element).closest("button")) return;
           const timer = window.setTimeout(() => {
             const bounds = map.getBoundingClientRect();
+            const currentZoom = zoomRef.current;
             onMoveTo({
-              x: position.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * viewSize.width,
-              y: position.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * viewSize.height,
+              x: position.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (viewSize.width / currentZoom),
+              y: position.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (viewSize.height / currentZoom),
             });
           }, 420);
           map.dataset["longPressTimer"] = String(timer);
         }}
-        onPointerUp={(event) => clearLongPress(event.currentTarget)}
-        onPointerCancel={(event) => clearLongPress(event.currentTarget)}
-        onPointerLeave={(event) => clearLongPress(event.currentTarget)}
+        onPointerMove={(event) => {
+          if (!pointersRef.current.has(event.pointerId)) return;
+          pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          if (pointersRef.current.size !== 2) return;
+          clearLongPress(event.currentTarget);
+          const points = [...pointersRef.current.values()];
+          const distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          const previousDistance = pinchDistanceRef.current;
+          if (previousDistance && previousDistance > 0) {
+            setZoom((current) => clampZoom(current * (distance / previousDistance)));
+          }
+          pinchDistanceRef.current = distance;
+        }}
+        onPointerUp={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
+        onPointerCancel={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
       >
-        <PersonalLandscape member={member} camera={isCurrentPlayer ? position : startingPositions[member.id]} />
+        <PersonalLandscape member={member} camera={isCurrentPlayer ? position : startingPositions[member.id]} zoom={zoom} />
         <WeatherLayer member={member} cleared={weatherCleared} />
         {signals.slice(0, 8).map((signal, index) => (
           <MappedSignal
@@ -429,18 +479,31 @@ function MemberJourney({
             signal={signal}
             viewer={member.id}
             camera={isCurrentPlayer ? position : startingPositions[member.id]}
+            zoom={zoom}
             index={index}
             onOpen={() => onOpenSignal(signal.id)}
           />
         ))}
-        {isCurrentPlayer && <FogLayer camera={position} explored={explored} />}
+        {isCurrentPlayer && <FogLayer camera={position} explored={explored} zoom={zoom} />}
 
-        {isCurrentPlayer && destination && <DestinationMarker camera={position} destination={destination} />}
+        {isCurrentPlayer && destination && <DestinationMarker camera={position} destination={destination} zoom={zoom} />}
 
         <div className="player-piece absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-75">
           <span className="absolute -inset-3 rounded-full border border-foreground/10 bg-surface/45" />
           <span className={cn("relative grid h-11 w-11 place-items-center rounded-full border-2 border-surface text-xs font-bold text-player-ink shadow-player", member.color)}>{member.id}</span>
         </div>
+      </div>
+
+      <div className="absolute left-4 top-[22%] z-50 flex flex-col overflow-hidden rounded-full border border-border bg-surface/95 shadow-soft backdrop-blur">
+        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(1.25)} disabled={zoom >= maxZoom} aria-label="放大地图" title="放大地图">
+          <Plus />
+        </Button>
+        <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(0.8)} disabled={zoom <= minZoom} aria-label="缩小地图" title="缩小地图">
+          <Minus />
+        </Button>
+        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => setZoom(minZoom)} disabled={zoom === minZoom} aria-label="查看地图全景" title="查看地图全景">
+          <Maximize2 />
+        </Button>
       </div>
 
       <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="进入四人路线总览">
@@ -493,8 +556,10 @@ function MemberJourney({
   );
 }
 
-function PersonalLandscape({ member, camera }: { member: Member; camera: Point }) {
-  const viewBox = `${camera.x - viewSize.width / 2} ${camera.y - viewSize.height / 2} ${viewSize.width} ${viewSize.height}`;
+function PersonalLandscape({ member, camera, zoom }: { member: Member; camera: Point; zoom: number }) {
+  const width = viewSize.width / zoom;
+  const height = viewSize.height / zoom;
+  const viewBox = `${camera.x - width / 2} ${camera.y - height / 2} ${width} ${height}`;
   return (
     <svg className="absolute inset-0 h-full w-full" viewBox={viewBox} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
@@ -551,14 +616,14 @@ function WeatherLayer({ member, cleared }: { member: Member; cleared: boolean })
   );
 }
 
-function FogLayer({ camera, explored }: { camera: Point; explored: Point[] }) {
+function FogLayer({ camera, explored, zoom }: { camera: Point; explored: Point[]; zoom: number }) {
   return (
     <svg className="fog-layer pointer-events-none absolute inset-0 z-20 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <mask id="explored-fog-mask">
           <rect width="100" height="100" fill="white" />
           {explored.map((point, index) => {
-            const screen = toScreen(point, camera);
+            const screen = toScreen(point, camera, zoom);
             return <circle key={`${point.x}-${point.y}-${index}`} cx={screen.x} cy={screen.y} r={index === explored.length - 1 ? 22 : 15} fill="black" />;
           })}
           <circle cx="50" cy="50" r="25" fill="black" />
@@ -569,8 +634,8 @@ function FogLayer({ camera, explored }: { camera: Point; explored: Point[] }) {
   );
 }
 
-function DestinationMarker({ camera, destination }: { camera: Point; destination: Point }) {
-  const screen = toScreen(destination, camera);
+function DestinationMarker({ camera, destination, zoom }: { camera: Point; destination: Point; zoom: number }) {
+  const screen = toScreen(destination, camera, zoom);
   return (
     <span
       className="destination-marker pointer-events-none absolute z-20 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/55"
@@ -580,8 +645,8 @@ function DestinationMarker({ camera, destination }: { camera: Point; destination
   );
 }
 
-function MappedSignal({ signal, viewer, camera, index, onOpen }: { signal: Signal; viewer: MemberId; camera: Point; index: number; onOpen: () => void }) {
-  const screen = toScreen(signal.position, camera);
+function MappedSignal({ signal, viewer, camera, zoom, index, onOpen }: { signal: Signal; viewer: MemberId; camera: Point; zoom: number; index: number; onOpen: () => void }) {
+  const screen = toScreen(signal.position, camera, zoom);
   if (screen.x < -18 || screen.x > 118 || screen.y < -18 || screen.y > 118) return null;
   const isSmoke = signal.kind === "help" && viewer === "B";
   const isWind = signal.kind === "reminder" && viewer === "B";
@@ -640,11 +705,26 @@ function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
   return "它在你的地貌里换了一种模样";
 }
 
-function toScreen(point: Point, camera: Point) {
+function toScreen(point: Point, camera: Point, zoom = 1) {
   return {
-    x: 50 + ((point.x - camera.x) / viewSize.width) * 100,
-    y: 50 + ((point.y - camera.y) / viewSize.height) * 100,
+    x: 50 + ((point.x - camera.x) / viewSize.width) * 100 * zoom,
+    y: 50 + ((point.y - camera.y) / viewSize.height) * 100 * zoom,
   };
+}
+
+function clampZoom(zoom: number) {
+  return Math.min(maxZoom, Math.max(minZoom, zoom));
+}
+
+function finishMapPointer(
+  element: HTMLElement,
+  pointerId: number,
+  pointersRef: { current: Map<number, Point> },
+  pinchDistanceRef: { current: number | null },
+) {
+  clearLongPress(element);
+  pointersRef.current.delete(pointerId);
+  if (pointersRef.current.size < 2) pinchDistanceRef.current = null;
 }
 
 function clearLongPress(element: HTMLElement) {
