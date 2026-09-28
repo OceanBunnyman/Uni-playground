@@ -440,6 +440,7 @@ function MemberJourney({
   const openDiscovery = discoveries.find((item) => item.id === openedDiscovery);
   const [zoom, setZoomState] = useState(1);
   const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
+  const [mapViewport, setMapViewport] = useState<Point>({ x: viewSize.width, y: viewSize.height });
   const offsetRef = useRef(offset);
   offsetRef.current = offset;
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -448,26 +449,29 @@ function MemberJourney({
   const pinchDistanceRef = useRef<number | null>(null);
 
   zoomRef.current = zoom;
-  // Keep the camera anchored in world space while the player walks. The player
-  // moves across the map; landscape details and traces stay at their coordinates.
   const basePosition = startingPositions[member.id];
-  const camera = { x: basePosition.x + offset.x, y: basePosition.y + offset.y };
-  const baseRef = useRef(basePosition);
-  baseRef.current = basePosition;
+  // Follow the current player while keeping every map element in one world-space camera.
+  const cameraAnchor = isCurrentPlayer ? position : basePosition;
+  const camera = { x: cameraAnchor.x + offset.x, y: cameraAnchor.y + offset.y };
+  const cameraAnchorRef = useRef(cameraAnchor);
+  cameraAnchorRef.current = cameraAnchor;
+  const mapViewportRef = useRef(mapViewport);
+  mapViewportRef.current = mapViewport;
 
   // Zoom the whole map around a focal point (fractions of the viewport), not around the player.
   const zoomAt = (nextZoomRaw: number, fx = 0.5, fy = 0.5) => {
     const prev = zoomRef.current;
     const next = clampZoom(nextZoomRaw);
     if (next === prev) return;
-    const base = baseRef.current;
+    const base = cameraAnchorRef.current;
     const off = offsetRef.current;
     const cam = { x: base.x + off.x, y: base.y + off.y };
-    const wx = cam.x + (fx - 0.5) * (viewSize.width / prev);
-    const wy = cam.y + (fy - 0.5) * (viewSize.height / prev);
+    const viewport = mapViewportRef.current;
+    const wx = cam.x + (fx - 0.5) * (viewport.x / prev);
+    const wy = cam.y + (fy - 0.5) * (viewport.y / prev);
     const nextOffset = {
-      x: wx - (fx - 0.5) * (viewSize.width / next) - base.x,
-      y: wy - (fy - 0.5) * (viewSize.height / next) - base.y,
+      x: wx - (fx - 0.5) * (viewport.x / next) - base.x,
+      y: wy - (fy - 0.5) * (viewport.y / next) - base.y,
     };
     zoomRef.current = next;
     offsetRef.current = nextOffset;
@@ -486,6 +490,17 @@ function MemberJourney({
     const map = mapRef.current;
     if (!map) return;
 
+    const syncViewport = () => {
+      const bounds = map.getBoundingClientRect();
+      if (bounds.width <= 0 || bounds.height <= 0) return;
+      const next = { x: viewSize.height * (bounds.width / bounds.height), y: viewSize.height };
+      mapViewportRef.current = next;
+      setMapViewport(next);
+    };
+    syncViewport();
+    const resizeObserver = new ResizeObserver(syncViewport);
+    resizeObserver.observe(map);
+
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1);
@@ -494,7 +509,10 @@ function MemberJourney({
     };
 
     map.addEventListener("wheel", handleWheel, { passive: false });
-    return () => map.removeEventListener("wheel", handleWheel);
+    return () => {
+      resizeObserver.disconnect();
+      map.removeEventListener("wheel", handleWheel);
+    };
   }, []);
 
 
@@ -536,8 +554,8 @@ function MemberJourney({
             const bounds = map.getBoundingClientRect();
             const currentZoom = zoomRef.current;
             onMoveTo({
-              x: baseRef.current.x + offsetRef.current.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (viewSize.width / currentZoom),
-              y: baseRef.current.y + offsetRef.current.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (viewSize.height / currentZoom),
+              x: cameraAnchorRef.current.x + offsetRef.current.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (mapViewportRef.current.x / currentZoom),
+              y: cameraAnchorRef.current.y + offsetRef.current.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (mapViewportRef.current.y / currentZoom),
             });
           }, 420);
           map.dataset["longPressTimer"] = String(timer);
@@ -561,7 +579,7 @@ function MemberJourney({
         onPointerUp={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
         onPointerCancel={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
       >
-        <PersonalLandscape member={member} camera={camera} zoom={zoom} />
+        <PersonalLandscape member={member} camera={camera} zoom={zoom} viewport={mapViewport} />
         <WeatherLayer member={member} cleared={weatherCleared} />
         {signals.slice(0, 8).map((signal, index) => (
           <MappedSignal
@@ -570,6 +588,7 @@ function MemberJourney({
             viewer={member.id}
             camera={camera}
             zoom={zoom}
+            viewport={mapViewport}
             index={index}
             onOpen={() => onOpenSignal(signal.id)}
           />
@@ -580,16 +599,17 @@ function MemberJourney({
             discovery={discovery}
             camera={camera}
             zoom={zoom}
+            viewport={mapViewport}
             completed={completedDiscoveries.has(discovery.id)}
           />
         ))}
         {isCurrentPlayer && (
-          <FogShaderCanvas camera={camera} explored={explored} zoom={zoom} viewSize={{ x: viewSize.width, y: viewSize.height }} />
+          <FogShaderCanvas camera={camera} explored={explored} zoom={zoom} viewSize={mapViewport} />
         )}
 
-        {isCurrentPlayer && destination && <DestinationMarker camera={camera} destination={destination} zoom={zoom} />}
+        {isCurrentPlayer && destination && <DestinationMarker camera={camera} destination={destination} zoom={zoom} viewport={mapViewport} />}
 
-        <div className="player-piece absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${toScreen(isCurrentPlayer ? position : basePosition, camera, zoom).x}%`, top: `${toScreen(isCurrentPlayer ? position : basePosition, camera, zoom).y}%` }}>
+        <div className="player-piece absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${toScreen(isCurrentPlayer ? position : basePosition, camera, zoom, mapViewport).x}%`, top: `${toScreen(isCurrentPlayer ? position : basePosition, camera, zoom, mapViewport).y}%` }}>
           <span className="absolute -inset-3 rounded-full border border-foreground/10 bg-surface/45" />
           <span className={cn("relative grid h-11 w-11 place-items-center rounded-full border-2 border-surface text-xs font-bold text-player-ink shadow-player", member.color)}>{member.id}</span>
         </div>
@@ -667,9 +687,9 @@ function MemberJourney({
   );
 }
 
-function PersonalLandscape({ member, camera, zoom }: { member: Member; camera: Point; zoom: number }) {
-  const width = viewSize.width / zoom;
-  const height = viewSize.height / zoom;
+function PersonalLandscape({ member, camera, zoom, viewport }: { member: Member; camera: Point; zoom: number; viewport: Point }) {
+  const width = viewport.x / zoom;
+  const height = viewport.y / zoom;
   const viewBox = `${camera.x - width / 2} ${camera.y - height / 2} ${width} ${height}`;
   return (
     <svg className="absolute inset-0 h-full w-full" viewBox={viewBox} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -727,9 +747,9 @@ function WeatherLayer({ member, cleared }: { member: Member; cleared: boolean })
   );
 }
 
-function DiscoveryMarker({ discovery, camera, zoom, completed }: { discovery: Discovery; camera: Point; zoom: number; completed: boolean }) {
+function DiscoveryMarker({ discovery, camera, zoom, viewport, completed }: { discovery: Discovery; camera: Point; zoom: number; viewport: Point; completed: boolean }) {
   if (completed) return null;
-  const screen = toScreen(discovery.position, camera, zoom);
+  const screen = toScreen(discovery.position, camera, zoom, viewport);
   if (screen.x < -15 || screen.x > 115 || screen.y < -15 || screen.y > 115) return null;
   return (
     <span className="discovery-marker pointer-events-none absolute z-30 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface text-signal-foreground shadow-signal" style={{ left: `${screen.x}%`, top: `${screen.y}%` }} aria-hidden="true">
@@ -738,8 +758,8 @@ function DiscoveryMarker({ discovery, camera, zoom, completed }: { discovery: Di
   );
 }
 
-function DestinationMarker({ camera, destination, zoom }: { camera: Point; destination: Point; zoom: number }) {
-  const screen = toScreen(destination, camera, zoom);
+function DestinationMarker({ camera, destination, zoom, viewport }: { camera: Point; destination: Point; zoom: number; viewport: Point }) {
+  const screen = toScreen(destination, camera, zoom, viewport);
   return (
     <span
       className="destination-marker pointer-events-none absolute z-40 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/55"
@@ -749,8 +769,8 @@ function DestinationMarker({ camera, destination, zoom }: { camera: Point; desti
   );
 }
 
-function MappedSignal({ signal, viewer, camera, zoom, index, onOpen }: { signal: Signal; viewer: MemberId; camera: Point; zoom: number; index: number; onOpen: () => void }) {
-  const screen = toScreen(signal.position, camera, zoom);
+function MappedSignal({ signal, viewer, camera, zoom, viewport, index, onOpen }: { signal: Signal; viewer: MemberId; camera: Point; zoom: number; viewport: Point; index: number; onOpen: () => void }) {
+  const screen = toScreen(signal.position, camera, zoom, viewport);
   if (screen.x < -18 || screen.x > 118 || screen.y < -18 || screen.y > 118) return null;
   const isSmoke = signal.kind === "help" && viewer === "B";
   const isWind = signal.kind === "reminder" && viewer === "B";
@@ -811,10 +831,10 @@ function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
   return "It takes a different shape in your landscape";
 }
 
-function toScreen(point: Point, camera: Point, zoom = 1) {
+function toScreen(point: Point, camera: Point, zoom = 1, viewport: Point = { x: viewSize.width, y: viewSize.height }) {
   return {
-    x: 50 + ((point.x - camera.x) / viewSize.width) * 100 * zoom,
-    y: 50 + ((point.y - camera.y) / viewSize.height) * 100 * zoom,
+    x: 50 + ((point.x - camera.x) / viewport.x) * 100 * zoom,
+    y: 50 + ((point.y - camera.y) / viewport.y) * 100 * zoom,
   };
 }
 
