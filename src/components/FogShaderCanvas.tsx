@@ -46,6 +46,13 @@ const fragmentShaderSource = /* glsl */ `
     return value;
   }
 
+  float cloudField(vec2 p, vec2 drift) {
+    float broad = fbm(p * 0.0045 + drift);
+    float middle = fbm(p * 0.011 - drift * 1.3 + vec2(4.2, 1.8));
+    float wisps = fbm(p * 0.026 + drift * 2.1 + vec2(1.7, 9.4));
+    return broad * 0.62 + middle * 0.34 + wisps * 0.18;
+  }
+
   void main() {
     vec2 screenUv = vec2(gl_FragCoord.x, uResolution.y - gl_FragCoord.y) / uResolution;
     vec2 world = uCamera + (screenUv - 0.5) * uViewSize / uZoom;
@@ -64,15 +71,36 @@ const fragmentShaderSource = /* glsl */ `
     if (clearing > 0.998) discard;
 
     vec2 drift = vec2(uTime * 0.018, -uTime * 0.011);
-    float broad = fbm(world * 0.0045 + drift);
-    float middle = fbm(world * 0.011 - drift * 1.3 + vec2(4.2, 1.8));
-    float wisps = fbm(world * 0.026 + drift * 2.1 + vec2(1.7, 9.4));
-    float density = smoothstep(0.2, 0.86, broad * 0.62 + middle * 0.34 + wisps * 0.18);
-    float cloudBody = smoothstep(0.24, 0.7, broad * 0.76 + middle * 0.3);
-    vec3 color = mix(uFogDeep, uFogLight, density * 0.88 + wisps * 0.12);
-    float fogAlpha = mix(0.48, 0.88, cloudBody) + wisps * 0.05;
+    float body = cloudField(world, drift);
+    float density = smoothstep(0.2, 0.86, body);
+
+    // Directional shading: light comes from the upper left, so cloud tops
+    // facing the light turn bright while thick cores sink into dark gray.
+    vec2 lightDir = normalize(vec2(-0.35, -0.94));
+    float eps = 16.0;
+    float bodyBelow = cloudField(world - lightDir * eps, drift);
+    float bodyAbove = cloudField(world + lightDir * eps, drift);
+    float facing = clamp(0.5 + (bodyBelow - bodyAbove) * 2.4, 0.0, 1.0);
+    float core = smoothstep(0.42, 0.88, body);
+
+    vec3 color = mix(uFogDeep, uFogLight, facing);
+    color = mix(color, uFogDeep * 0.78, core * 0.6);
+
+    // A darker distant cloud layer drifting at its own pace, composited
+    // underneath to give the fog real depth between gray levels.
+    float distantField = fbm(world * 0.0031 + drift * 0.55 + vec2(31.0, 12.0));
+    float distant = smoothstep(0.52, 0.95, distantField);
+    color = mix(color, uFogDeep * 0.72, distant * 0.5);
+
+    // Silver lining along thin edges of dense clouds, plus a faint vertical
+    // sky gradient so the layering reads even when the noise is calm.
+    float rim = smoothstep(0.28, 0.46, density) * (1.0 - smoothstep(0.52, 0.88, body));
+    color += vec3(0.07, 0.075, 0.08) * rim * (0.4 + facing * 0.6);
+    color += vec3(0.05) * (screenUv.y - 0.5) * -1.0;
+
+    float fogAlpha = mix(0.5, 0.9, density) + distant * 0.06;
     float boundaryVeil = 1.0 - smoothstep(0.0, 0.94, clearing);
-    gl_FragColor = vec4(color, clamp(fogAlpha * boundaryVeil, 0.0, 0.9));
+    gl_FragColor = vec4(color, clamp(fogAlpha * boundaryVeil, 0.0, 0.92));
   }
 `;
 
