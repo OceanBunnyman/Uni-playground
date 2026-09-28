@@ -281,9 +281,9 @@ function JourneyGame() {
           setDestination(point);
         }}
         onSignal={leaveSignal}
-        onResolve={() => {
+        onResolve={(signalId) => {
           setOpenedSignal(null);
-          leaveSignal("resolve");
+          leaveSignal("resolve", undefined, signalId);
         }}
         onOpenSignal={(id) => {
           destinationRef.current = null;
