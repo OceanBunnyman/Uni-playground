@@ -561,8 +561,21 @@ function MemberJourney({
           map.dataset["longPressTimer"] = String(timer);
         }}
         onPointerMove={(event) => {
-          if (!pointersRef.current.has(event.pointerId)) return;
+          const previousPoint = pointersRef.current.get(event.pointerId);
+          if (!previousPoint) return;
           pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          if (pointersRef.current.size === 1 && !isCurrentPlayer) {
+            // Companions' maps: one-finger drag pans the camera in world space.
+            const bounds = event.currentTarget.getBoundingClientRect();
+            const scale = mapViewportRef.current.y / zoomRef.current / bounds.height;
+            const nextOffset = {
+              x: offsetRef.current.x - (event.clientX - previousPoint.x) * scale,
+              y: offsetRef.current.y - (event.clientY - previousPoint.y) * scale,
+            };
+            offsetRef.current = nextOffset;
+            setOffset(nextOffset);
+            return;
+          }
           if (pointersRef.current.size !== 2) return;
           clearLongPress(event.currentTarget);
           const points = [...pointersRef.current.values()];
