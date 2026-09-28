@@ -118,7 +118,7 @@ const initialSignals: Signal[] = [
 ];
 
 const initialDiscoveries: Discovery[] = [
-  { id: "chest-reeds", kind: "chest", position: { x: 460, y: 560 }, title: "A little crate in the reeds", note: "Inside is a warm lantern ember, saved for the next unfamiliar stretch." },
+  { id: "chest-reeds", kind: "chest", position: { x: 460, y: 560 }, title: "A little crate in the reeds", note: "Help Others 5 times even though they (you) are not urgent." },
 ];
 
 function JourneyGame() {
