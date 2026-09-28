@@ -212,8 +212,8 @@
   --member-trail-edge: oklch(0.77 0.055 90);
   --member-water: oklch(0.72 0.085 213);
   --member-detail: oklch(0.75 0.075 143);
-  --fog-light-rgb: 0.84 0.88 0.83;
-  --fog-deep-rgb: 0.68 0.75 0.71;
+  --fog-light-rgb: 0.84 0.85 0.83;
+  --fog-deep-rgb: 0.55 0.59 0.57;
   background-color: var(--member-map);
 }
 

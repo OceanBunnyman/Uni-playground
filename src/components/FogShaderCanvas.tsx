@@ -57,7 +57,7 @@ const fragmentShaderSource = /* glsl */ `
       if (i >= uClearingCount) break;
       float radius = i == 0 ? 94.0 : 69.0;
       float warpedRadius = radius + (boundaryNoise - 0.5) * 42.0 + (boundaryDetail - 0.5) * 14.0;
-      float feather = 18.0 / sqrt(uZoom);
+      float feather = 28.0 / sqrt(uZoom);
       clearing = max(clearing, 1.0 - smoothstep(warpedRadius - feather, warpedRadius + feather, distance(world, uClearings[i])));
     }
 
@@ -67,10 +67,10 @@ const fragmentShaderSource = /* glsl */ `
     float broad = fbm(world * 0.0045 + drift);
     float middle = fbm(world * 0.011 - drift * 1.3 + vec2(4.2, 1.8));
     float wisps = fbm(world * 0.026 + drift * 2.1 + vec2(1.7, 9.4));
-    float density = smoothstep(0.22, 0.88, broad * 0.62 + middle * 0.34 + wisps * 0.18);
-    float cloudBody = smoothstep(0.26, 0.72, broad * 0.76 + middle * 0.3);
+    float density = smoothstep(0.2, 0.86, broad * 0.62 + middle * 0.34 + wisps * 0.18);
+    float cloudBody = smoothstep(0.24, 0.7, broad * 0.76 + middle * 0.3);
     vec3 color = mix(uFogDeep, uFogLight, density * 0.88 + wisps * 0.12);
-    float fogAlpha = mix(0.38, 0.82, cloudBody) + wisps * 0.08;
+    float fogAlpha = mix(0.48, 0.88, cloudBody) + wisps * 0.05;
     float boundaryVeil = 1.0 - smoothstep(0.0, 0.94, clearing);
     gl_FragColor = vec4(color, clamp(fogAlpha * boundaryVeil, 0.0, 0.9));
   }
@@ -104,7 +104,7 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext("webgl", { alpha: true, antialias: false, powerPreference: "low-power" });
+    const gl = canvas.getContext("webgl", { alpha: true, antialias: false, premultipliedAlpha: false, powerPreference: "low-power" });
     if (!gl) return;
 
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
@@ -134,8 +134,8 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
     const clearingsLocation = gl.getUniformLocation(program, "uClearings");
     const fogLightLocation = gl.getUniformLocation(program, "uFogLight");
     const fogDeepLocation = gl.getUniformLocation(program, "uFogDeep");
-    const fogLight = readRgb(canvas, "--fog-light-rgb", [0.84, 0.88, 0.83]);
-    const fogDeep = readRgb(canvas, "--fog-deep-rgb", [0.68, 0.75, 0.71]);
+    const fogLight = readRgb(canvas, "--fog-light-rgb", [0.84, 0.85, 0.83]);
+    const fogDeep = readRgb(canvas, "--fog-deep-rgb", [0.55, 0.59, 0.57]);
     gl.uniform3fv(fogLightLocation, fogLight);
     gl.uniform3fv(fogDeepLocation, fogDeep);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
