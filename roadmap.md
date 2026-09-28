@@ -15,3 +15,4 @@
 - [x] 恢复人物视角跟随，并统一背景、迷雾与痕迹的世界坐标
 - [x] Map color themes: A blue, B yellow, C green, D red (map + member accents)
 - [x] Verify note composer flow end-to-end
+- [x] 统一地图触发点为求助、提醒与随机宝箱，并加入解决、已读和已开启状态

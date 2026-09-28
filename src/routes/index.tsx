@@ -2,19 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowLeft,
   BellRing,
-  CloudSun,
   Eye,
   Flame,
-  HandHeart,
   Map as MapIcon,
   PackageOpen,
   Send,
-
-
-  Sparkles,
-  Star,
-  Waves,
-  Wind,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -29,7 +21,7 @@ export const Route = createFileRoute("/")({
       { title: "Together · A Four-Person Journey" },
       { name: "description", content: "Four people travel different routes and discover the traces their companions leave on each other's maps." },
       { property: "og:title", content: "Together · A Four-Person Journey" },
-      { property: "og:description", content: "Walk different paths, notice each other's campfires, wind chimes, stars and clearing skies, and reach camp together." },
+      { property: "og:description", content: "Walk different paths, notice each other's campfires and wind chimes, discover hidden chests, and reach camp together." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -38,7 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 type MemberId = "A" | "B" | "C" | "D";
-type SignalKind = "help" | "resolve" | "reminder" | "thanks";
+type SignalKind = "help" | "reminder";
 type Point = { x: number; y: number };
 
 type Member = {
@@ -57,11 +49,13 @@ type Signal = {
   note: string;
   position: Point;
   to?: MemberId[] | undefined;
+  resolved?: boolean;
+  read?: boolean;
 };
 
 type Discovery = {
   id: string;
-  kind: "chest" | "help-task";
+  kind: "chest";
   position: Point;
   title: string;
   note: string;
@@ -116,12 +110,10 @@ const startingPositions: Record<MemberId, Point> = {
 const initialSignals: Signal[] = [
   { id: 1, from: "B", kind: "reminder", position: { x: 320, y: 240 }, note: "A string of wind chimes by the river: there's a tailwind at the bend." },
   { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Smoke rises on the sheltered slope — Mimi could use a hand here." },
-  { id: 3, from: "B", kind: "thanks", position: { x: 380, y: 80 }, note: "Mako hung a star in the sky: thanks for coming close earlier." },
 ];
 
-const discoveries: Discovery[] = [
+const initialDiscoveries: Discovery[] = [
   { id: "chest-reeds", kind: "chest", position: { x: 460, y: 560 }, title: "A little crate in the reeds", note: "Inside is a warm lantern ember, saved for the next unfamiliar stretch." },
-  { id: "help-maimai", kind: "help-task", position: { x: 40, y: 380 }, title: "Mimi needs a tailwind", note: "Mimi is looking for shelter on the meadow. Walk to her smoke to answer the call." },
 ];
 
 function JourneyGame() {
@@ -132,9 +124,9 @@ function JourneyGame() {
   const [toast, setToast] = useState("");
   const [destination, setDestination] = useState<Point | null>(null);
   const [explored, setExplored] = useState<Point[]>([startingPositions.A]);
-  const [weatherCleared, setWeatherCleared] = useState(false);
   const [openedDiscovery, setOpenedDiscovery] = useState<string | null>(null);
   const [completedDiscoveries, setCompletedDiscoveries] = useState<Set<string>>(() => new Set());
+  const [discoveries, setDiscoveries] = useState<Discovery[]>(initialDiscoveries);
   const positionRef = useRef(startingPositions.A);
   const destinationRef = useRef<Point | null>(null);
   const selectedRef = useRef<MemberId | null>("A");
@@ -142,6 +134,7 @@ function JourneyGame() {
   const openedSignalRef = useRef<number | null>(null);
   const openedDiscoveryRef = useRef<string | null>(null);
   const completedDiscoveriesRef = useRef(new Set<string>());
+  const discoveriesRef = useRef(initialDiscoveries);
   const encounteredRef = useRef(new Set<number>());
 
   selectedRef.current = selected;
@@ -149,6 +142,19 @@ function JourneyGame() {
   openedSignalRef.current = openedSignal;
   openedDiscoveryRef.current = openedDiscovery;
   completedDiscoveriesRef.current = completedDiscoveries;
+  discoveriesRef.current = discoveries;
+
+  useEffect(() => {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 300 + Math.random() * 220;
+    setDiscoveries(initialDiscoveries.map((discovery) => ({
+      ...discovery,
+      position: {
+        x: startingPositions.A.x + Math.cos(angle) * distance,
+        y: startingPositions.A.y + Math.sin(angle) * distance,
+      },
+    })));
+  }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -178,7 +184,7 @@ function JourneyGame() {
         return [...currentExplored, next];
       });
 
-      const discovery = discoveries.find((item) => {
+      const discovery = discoveriesRef.current.find((item) => {
         if (completedDiscoveriesRef.current.has(item.id)) return false;
         return Math.hypot(next.x - item.position.x, next.y - item.position.y) <= 30;
       });
@@ -217,29 +223,8 @@ function JourneyGame() {
     window.setTimeout(() => setToast(""), 2800);
   };
 
-  const leaveSignal = (kind: SignalKind, note?: string, resolvedId?: number, to?: MemberId[]) => {
+  const leaveSignal = (kind: SignalKind, note?: string, to?: MemberId[]) => {
     const current = positionRef.current;
-    if (kind === "resolve") {
-      const resolved: Signal = {
-        id: Date.now(),
-        from: "A",
-        kind,
-        position: current,
-        note: "We got around the tricky part — the clouds are parting and the path is brighter.",
-      };
-      const thanks: Signal = {
-        id: Date.now() + 1,
-        from: "B",
-        kind: "thanks",
-        position: { x: current.x + 64, y: current.y - 118 },
-        note: "Mako hung a star in the sky: thanks for lighting up this stretch.",
-      };
-      setWeatherCleared(true);
-      setSignals((currentSignals) => [thanks, resolved, ...currentSignals.filter((item) => item.id !== resolvedId || item.kind !== "help")]);
-      pushToast("The mist lifts on A's and B's maps, and the fire trace is cleared");
-      return;
-    }
-
     const signal: Signal = {
       id: Date.now(),
       from: "A",
@@ -263,8 +248,8 @@ function JourneyGame() {
         toast={toast}
         destination={destination}
         explored={explored}
-        weatherCleared={weatherCleared}
         openedDiscovery={openedDiscovery}
+        discoveries={discoveries}
         completedDiscoveries={completedDiscoveries}
         isCurrentPlayer={active.id === "A"}
         onBack={() => {
@@ -280,7 +265,13 @@ function JourneyGame() {
         onSignal={leaveSignal}
         onResolve={(signalId) => {
           setOpenedSignal(null);
-          leaveSignal("resolve", undefined, signalId);
+          setSignals((currentSignals) => currentSignals.map((signal) => signal.id === signalId ? { ...signal, resolved: true } : signal));
+          pushToast("Marked as resolved");
+        }}
+        onRead={(signalId) => {
+          setOpenedSignal(null);
+          setSignals((currentSignals) => currentSignals.map((signal) => signal.id === signalId ? { ...signal, read: true } : signal));
+          pushToast("Reminder marked as read");
         }}
         onOpenSignal={(id) => {
           destinationRef.current = null;
@@ -289,14 +280,10 @@ function JourneyGame() {
         }}
         onCloseSignal={() => setOpenedSignal(null)}
         onCloseDiscovery={() => setOpenedDiscovery(null)}
-        onCompleteDiscovery={(id, kind) => {
+        onCompleteDiscovery={(id) => {
           setCompletedDiscoveries((current) => new Set(current).add(id));
           setOpenedDiscovery(null);
-          pushToast(kind === "chest" ? "Picked up a lantern ember" : "Accepted the task to help Mimi");
-        }}
-        onReply={(text) => {
-          setOpenedSignal(null);
-          pushToast(text);
+          pushToast("Chest opened");
         }}
         onOpenOverview={() => {
           destinationRef.current = null;
@@ -334,7 +321,7 @@ function Overview({
         <section className="relative overflow-hidden rounded-3xl border border-border bg-map p-2 shadow-map sm:p-3" aria-label="Overview of all four routes">
           <div className="grid grid-cols-2 gap-1.5 overflow-hidden rounded-2xl bg-border/60 sm:gap-2">
             {members.map((member, index) => {
-              const latest = signals.find((signal) => signal.from === member.id || signal.kind === "thanks");
+              const latest = signals.find((signal) => signal.from === member.id);
               return (
                 <Button
                   key={member.id}
@@ -399,19 +386,19 @@ function MemberJourney({
   toast,
   destination,
   explored,
-  weatherCleared,
   openedDiscovery,
+  discoveries,
   completedDiscoveries,
   isCurrentPlayer,
   onBack,
   onMoveTo,
   onSignal,
   onResolve,
+  onRead,
   onOpenSignal,
   onCloseSignal,
   onCloseDiscovery,
   onCompleteDiscovery,
-  onReply,
   onOpenOverview,
 }: {
   member: Member;
@@ -421,19 +408,19 @@ function MemberJourney({
   toast: string;
   destination: Point | null;
   explored: Point[];
-  weatherCleared: boolean;
   openedDiscovery: string | null;
+  discoveries: Discovery[];
   completedDiscoveries: Set<string>;
   isCurrentPlayer: boolean;
   onBack: () => void;
   onMoveTo: (point: Point) => void;
-  onSignal: (kind: SignalKind, note?: string, resolvedId?: number, to?: MemberId[]) => void;
+  onSignal: (kind: SignalKind, note?: string, to?: MemberId[]) => void;
   onResolve: (signalId: number) => void;
+  onRead: (signalId: number) => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
   onCloseDiscovery: () => void;
-  onCompleteDiscovery: (id: string, kind: Discovery["kind"]) => void;
-  onReply: (text: string) => void;
+  onCompleteDiscovery: (id: string) => void;
   onOpenOverview: () => void;
 }) {
   const open = signals.find((signal) => signal.id === openedSignal);
@@ -598,7 +585,6 @@ function MemberJourney({
         onPointerCancel={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
       >
         <PersonalLandscape member={member} camera={camera} zoom={zoom} viewport={mapViewport} />
-        <WeatherLayer member={member} cleared={weatherCleared} />
         {signals.filter((signal) => !signal.to || signal.from === member.id || signal.to.includes(member.id)).slice(0, 8).map((signal, index) => (
           <MappedSignal
             key={signal.id}
@@ -652,7 +638,7 @@ function MemberJourney({
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                onSignal(composer, draft, undefined, recipients);
+                onSignal(composer, draft, recipients);
                 setComposer(null);
                 setDraft("");
                 setRecipients([]);
@@ -715,11 +701,11 @@ function MemberJourney({
               <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseSignal} aria-label="Close"><X /></Button>
             </div>
             <p className="mb-5 font-display text-xl leading-relaxed">“{open.note}”</p>
-            {isCurrentPlayer && (
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="secondary" onClick={() => onReply(`Let ${source.name} know you saw it`)}>I see it</Button>
-                <Button onClick={() => onResolve(open.id)}><CloudSun className="h-4 w-4" />Resolved</Button>
-              </div>
+            {open.kind === "help" && !open.resolved && open.from !== member.id && (
+              <Button className="w-full" onClick={() => onResolve(open.id)}>Mark as resolved</Button>
+            )}
+            {open.kind === "reminder" && !open.read && open.from !== member.id && (
+              <Button className="w-full" onClick={() => onRead(open.id)}>Mark as read</Button>
             )}
           </section>
         </div>
@@ -730,7 +716,7 @@ function MemberJourney({
           <section className="w-full rounded-2xl bg-surface p-5 shadow-dock sm:max-w-sm" onClick={(event) => event.stopPropagation()}>
             <div className="mb-4 flex items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-signal/45 text-signal-foreground">
-                {openDiscovery.kind === "chest" ? <PackageOpen /> : <HandHeart />}
+                <PackageOpen />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold text-muted-foreground">Found beneath the mist</p>
@@ -739,8 +725,8 @@ function MemberJourney({
               <Button variant="ghost" size="icon" className="rounded-full" onClick={onCloseDiscovery} aria-label="Close discovery"><X /></Button>
             </div>
             <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{openDiscovery.note}</p>
-            <Button className="w-full" onClick={() => onCompleteDiscovery(openDiscovery.id, openDiscovery.kind)}>
-              {openDiscovery.kind === "chest" ? "Take the ember" : "Accept task"}
+            <Button className="w-full" onClick={() => onCompleteDiscovery(openDiscovery.id)}>
+              Open chest
             </Button>
           </section>
         </div>
@@ -796,24 +782,12 @@ function PersonalLandscape({ member, camera, zoom, viewport }: { member: Member;
   );
 }
 
-function WeatherLayer({ member, cleared }: { member: Member; cleared: boolean }) {
-  if (member.id !== "A" && member.id !== "B") return null;
-  return (
-    <div className={cn("pointer-events-none absolute inset-0 z-10", cleared ? "weather-clear" : "weather-clouds")} aria-hidden="true">
-      <span className="absolute left-[10%] top-[15%] h-24 w-48 rounded-full bg-surface/55 blur-xl" />
-      <span className="absolute right-[4%] top-[30%] h-20 w-52 rounded-full bg-surface/50 blur-xl" />
-      {cleared && <CloudSun className="absolute right-[16%] top-[12%] h-14 w-14 text-primary/70" />}
-    </div>
-  );
-}
-
 function DiscoveryMarker({ discovery, camera, zoom, viewport, completed }: { discovery: Discovery; camera: Point; zoom: number; viewport: Point; completed: boolean }) {
-  if (completed) return null;
   const screen = toScreen(discovery.position, camera, zoom, viewport);
   if (screen.x < -15 || screen.x > 115 || screen.y < -15 || screen.y > 115) return null;
   return (
-    <span className="discovery-marker pointer-events-none absolute z-30 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface text-signal-foreground shadow-signal" style={{ left: `${screen.x}%`, top: `${screen.y}%` }} aria-hidden="true">
-      {discovery.kind === "chest" ? <PackageOpen className="h-5 w-5" /> : <HandHeart className="h-5 w-5" />}
+    <span className={cn("discovery-marker pointer-events-none absolute z-30 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center text-signal-foreground", !completed && "rounded-full bg-signal/35 shadow-signal")} style={{ left: `${screen.x}%`, top: `${screen.y}%` }} aria-label={completed ? "Opened chest" : "Unopened chest"}>
+      <PackageOpen className={cn("h-6 w-6", completed && "opacity-65")} />
     </span>
   );
 }
@@ -832,64 +806,40 @@ function DestinationMarker({ camera, destination, zoom, viewport }: { camera: Po
 function MappedSignal({ signal, viewer, camera, zoom, viewport, index, onOpen }: { signal: Signal; viewer: MemberId; camera: Point; zoom: number; viewport: Point; index: number; onOpen: () => void }) {
   const screen = toScreen(signal.position, camera, zoom, viewport);
   if (screen.x < -18 || screen.x > 118 || screen.y < -18 || screen.y > 118) return null;
-  const isSmoke = signal.kind === "help" && viewer !== signal.from;
-  const isWind = signal.kind === "reminder" && viewer !== signal.from;
-  const isCloudClear = signal.kind === "resolve" && (viewer === "A" || viewer === "B");
-  const isStar = signal.kind === "thanks";
+  const isOwn = viewer === signal.from;
+  const isChanged = signal.kind === "help" ? signal.resolved : signal.read;
+  const Icon = signal.kind === "help" ? Flame : BellRing;
 
   return (
     <Button
       variant="ghost"
       onClick={onOpen}
-      className={cn("signal-marker absolute z-30 h-auto w-auto -translate-x-1/2 -translate-y-1/2 rounded-full p-0 hover:bg-transparent", index > 3 && "opacity-80")}
+      className={cn("absolute z-30 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full p-0 hover:bg-transparent", !isOwn && "signal-marker", index > 3 && "opacity-80")}
       style={{ left: `${screen.x}%`, top: `${screen.y}%` }}
       aria-label={`View the trace ${signal.from} left on this map`}
     >
-      {isSmoke ? (
-        <span className="smoke-trace relative flex flex-col items-center text-signal-foreground">
-          <span className="h-6 w-6 rounded-full bg-signal/35" />
-          <span className="-mt-2 h-5 w-5 rounded-full bg-signal/55" />
-          <Flame className="mt-0.5 h-5 w-5 text-fire" />
-        </span>
-      ) : isWind ? (
-        <span className="wind-current relative flex items-center gap-1.5 rounded-full bg-post-soft/90 px-3 py-2 text-[10px] font-semibold text-post shadow-soft backdrop-blur">
-          <Wind className="h-4 w-4" />Chime wind
-        </span>
-      ) : isCloudClear ? (
-        <span className="cloud-clear-marker grid h-12 w-12 place-items-center rounded-full bg-surface/85 text-primary shadow-signal backdrop-blur">
-          <CloudSun className="h-6 w-6" />
-        </span>
-      ) : isStar ? (
-        <span className="star-hang relative grid h-12 w-12 place-items-center rounded-full bg-signal/40 text-signal-foreground shadow-signal backdrop-blur">
-          <Star className="h-6 w-6 fill-current" />
-        </span>
-      ) : signal.kind === "help" && signal.from === viewer ? (
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-fire-soft text-fire shadow-signal"><Flame className="h-6 w-6 fill-current" /></span>
-      ) : signal.kind === "reminder" ? (
-        <span className="chime-sway grid h-11 w-11 place-items-center rounded-full bg-post-soft text-post shadow-signal"><BellRing className="h-5 w-5" /></span>
-      ) : (
-        <span className="relative flex items-center gap-1.5 rounded-full bg-post-soft/90 px-3 py-2 text-[10px] font-semibold text-post shadow-soft backdrop-blur">
-          <Waves className="h-4 w-4" />Companion trace
-        </span>
-      )}
+      <span className={cn(
+        "grid h-11 w-11 place-items-center",
+        signal.kind === "help" ? "text-fire" : "text-post",
+        !isOwn && "rounded-full border border-surface/80 bg-surface/90 shadow-signal backdrop-blur",
+        isChanged && "border-dashed opacity-60 saturate-50",
+      )}>
+        <Icon className={cn("h-7 w-7", signal.kind === "help" && "fill-current", isChanged && "stroke-[2.5]")} strokeDasharray={isChanged ? "3 3" : undefined} />
+      </span>
     </Button>
   );
 }
 
 
 function SignalIcon({ kind, className }: { kind: SignalKind; className?: string }) {
-  if (kind === "help") return <Waves className={className} />;
-  if (kind === "resolve") return <CloudSun className={className} />;
+  if (kind === "help") return <Flame className={className} />;
   if (kind === "reminder") return <BellRing className={className} />;
-  return <Star className={className} />;
+  return null;
 }
 
 function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
-  if (kind === "help" && viewer !== source) return "A teammate's fire becomes smoke on your map";
-  if (kind === "resolve" && (viewer === "A" || viewer === "B")) return "The mist parts and the sky clears";
-  if (kind === "reminder" && viewer !== source) return "A teammate's chime becomes wind on your path";
-  if (kind === "thanks") return `A star hung by ${source}, visible to everyone`;
-  return "It takes a different shape in your landscape";
+  if (kind === "help") return viewer === source ? "Your help request" : `A help request from ${source}`;
+  return viewer === source ? "Your reminder" : `A reminder from ${source}`;
 }
 
 function toScreen(point: Point, camera: Point, zoom = 1, viewport: Point = { x: viewSize.width, y: viewSize.height }) {
