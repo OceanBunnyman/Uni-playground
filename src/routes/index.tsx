@@ -114,14 +114,14 @@ const startingPositions: Record<MemberId, Point> = {
 };
 
 const initialSignals: Signal[] = [
-  { id: 1, from: "B", kind: "reminder", position: { x: 238, y: 307 }, note: "A string of wind chimes by the river: there's a tailwind at the bend." },
-  { id: 2, from: "D", kind: "help", position: { x: 164, y: 530 }, note: "Smoke rises on the sheltered slope — Mimi could use a hand here." },
-  { id: 3, from: "B", kind: "thanks", position: { x: 286, y: 165 }, note: "Mako hung a star in the sky: thanks for coming close earlier." },
+  { id: 1, from: "B", kind: "reminder", position: { x: 320, y: 240 }, note: "A string of wind chimes by the river: there's a tailwind at the bend." },
+  { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Smoke rises on the sheltered slope — Mimi could use a hand here." },
+  { id: 3, from: "B", kind: "thanks", position: { x: 380, y: 80 }, note: "Mako hung a star in the sky: thanks for coming close earlier." },
 ];
 
 const discoveries: Discovery[] = [
-  { id: "chest-reeds", kind: "chest", position: { x: 318, y: 540 }, title: "A little crate in the reeds", note: "Inside is a warm lantern ember, saved for the next unfamiliar stretch." },
-  { id: "help-maimai", kind: "help-task", position: { x: 118, y: 448 }, title: "Mimi needs a tailwind", note: "Mimi is looking for shelter on the meadow. Walk to her smoke to answer the call." },
+  { id: "chest-reeds", kind: "chest", position: { x: 460, y: 560 }, title: "A little crate in the reeds", note: "Inside is a warm lantern ember, saved for the next unfamiliar stretch." },
+  { id: "help-maimai", kind: "help-task", position: { x: 40, y: 380 }, title: "Mimi needs a tailwind", note: "Mimi is looking for shelter on the meadow. Walk to her smoke to answer the call." },
 ];
 
 function JourneyGame() {
@@ -165,7 +165,7 @@ function JourneyGame() {
         return;
       }
 
-      const pace = 4.2;
+      const pace = 6.5;
       const next = {
         x: current.x + (dx / distance) * Math.min(pace, distance),
         y: current.y + (dy / distance) * Math.min(pace, distance),
