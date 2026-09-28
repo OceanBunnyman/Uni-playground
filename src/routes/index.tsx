@@ -573,7 +573,7 @@ function MemberJourney({
             return;
           }
           if (pointersRef.current.size !== 2) return;
-          clearLongPress(event.currentTarget);
+          tapStartRef.current = null;
           const points = [...pointersRef.current.values()];
           const distance = distanceBetweenFirstTwo(points);
           if (distance === null) return;
