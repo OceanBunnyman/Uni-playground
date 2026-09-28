@@ -256,12 +256,45 @@
 .smoke-trace { animation: drift 4s ease-in-out infinite; }
 .destination-marker { animation: destination-pulse 1.8s ease-in-out infinite; }
 
+.fog-layer rect {
+  animation: fog-breathe 7s ease-in-out infinite;
+  fill: color-mix(in oklab, var(--surface) 76%, var(--member-map));
+  opacity: .82;
+}
+
+.weather-clouds {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--surface) 36%, transparent), transparent 46%);
+}
+
+.weather-clear {
+  animation: sky-clear 1.8s ease-out both;
+  background: radial-gradient(circle at 78% 16%, color-mix(in oklab, var(--signal) 38%, transparent) 0 9%, transparent 24%);
+}
+
+.wind-current {
+  animation: wind-flow 2.8s ease-in-out infinite;
+}
+
+.star-hang {
+  animation: star-hang 3.8s ease-in-out infinite;
+}
+
+.chime-sway {
+  animation: chime-sway 2.9s ease-in-out infinite;
+}
+
 @keyframes breathe { 50% { transform: scale(1.16); opacity: .35; } }
 @keyframes float { 50% { margin-top: -4px; } }
 @keyframes drift { 50% { transform: translate(3px, -5px); opacity: .72; } }
 @keyframes destination-pulse { 50% { box-shadow: 0 0 0 9px color-mix(in oklab, var(--primary) 12%, transparent); } }
 
+@keyframes fog-breathe { 50% { opacity: .68; } }
+@keyframes sky-clear { from { opacity: .3; } to { opacity: 1; } }
+@keyframes wind-flow { 50% { transform: translateX(9px); } }
+@keyframes star-hang { 50% { transform: translateY(-5px) scale(1.04); } }
+@keyframes chime-sway { 30% { transform: rotate(-5deg); } 70% { transform: rotate(5deg); } }
+
 @media (prefers-reduced-motion: reduce) {
-  .signal-marker::after, .player-piece, .smoke-trace, .destination-marker { animation: none; }
+  .signal-marker::after, .player-piece, .smoke-trace, .destination-marker, .fog-layer rect, .wind-current, .star-hang, .chime-sway { animation: none; }
   * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }
