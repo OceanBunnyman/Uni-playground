@@ -47,7 +47,6 @@ type Member = {
   region: string;
   color: string;
   theme: string;
-  route: string;
   overviewRoute: string;
 };
 
@@ -78,7 +77,6 @@ const members: Member[] = [
     region: "Tundra Shallows",
     color: "bg-player-a",
     theme: "map-theme-a",
-    route: "M198 820 C105 746 122 656 221 632 C323 608 322 489 208 466 C98 444 87 332 184 294 C270 259 280 139 218 0",
     overviewRoute: "M16 20 C72 28 52 93 113 108 C176 122 184 184 248 214",
   },
   {
@@ -87,7 +85,6 @@ const members: Member[] = [
     region: "Bluebrook River",
     color: "bg-player-b",
     theme: "map-theme-b",
-    route: "M105 820 C250 767 298 686 186 622 C82 562 128 472 274 432 C357 410 307 298 172 278 C73 262 120 121 215 0",
     overviewRoute: "M244 18 C179 37 213 92 142 109 C78 125 72 180 12 214",
   },
   {
@@ -96,7 +93,6 @@ const members: Member[] = [
     region: "Windy Ridge",
     color: "bg-player-c",
     theme: "map-theme-c",
-    route: "M302 820 C182 744 115 691 204 609 C300 522 289 440 175 414 C65 388 86 270 220 236 C302 215 295 93 226 0",
     overviewRoute: "M18 202 C77 178 67 125 126 110 C185 94 189 40 248 9",
   },
   {
@@ -105,7 +101,6 @@ const members: Member[] = [
     region: "Warm Meadow",
     color: "bg-player-d",
     theme: "map-theme-d",
-    route: "M118 820 C71 726 197 682 279 629 C356 579 291 483 163 455 C49 430 106 318 235 283 C338 255 299 119 216 0",
     overviewRoute: "M243 202 C184 180 194 129 135 108 C74 87 72 38 12 9",
   },
 ];
@@ -775,8 +770,6 @@ function PersonalLandscape({ member, camera, zoom, viewport }: { member: Member;
           <circle cx="168" cy="101" r="9"/><circle cx="295" cy="387" r="12"/><circle cx="185" cy="707" r="8"/>
         </g>
       )}
-      <path d={member.route} fill="none" stroke="var(--member-trail-edge)" strokeWidth="39" strokeLinecap="round" />
-      <path d={member.route} fill="none" stroke="var(--member-trail)" strokeWidth="31" strokeLinecap="round" strokeDasharray="3 9" />
       <g transform="translate(218 54)">
         <ellipse cy="19" rx="37" ry="11" fill="var(--finish)" opacity=".7" />
         <path d="M-18 9 L0-14 L19 9 M-12 9 V-1 H13 V9 M0-14 V-27" fill="none" stroke="var(--foreground)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
