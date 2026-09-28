@@ -838,8 +838,8 @@ function SignalIcon({ kind, className }: { kind: SignalKind; className?: string 
 }
 
 function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
-  if (kind === "help") return viewer === source ? "Your help request" : `A help request from ${source}`;
-  return viewer === source ? "Your reminder" : `A reminder from ${source}`;
+  if (kind === "help") return viewer === source ? "Your help message" : `A help message from ${source}`;
+  return viewer === source ? "Your reminder point" : `A reminder point from ${source}`;
 }
 
 function toScreen(point: Point, camera: Point, zoom = 1, viewport: Point = { x: viewSize.width, y: viewSize.height }) {
