@@ -441,6 +441,7 @@ function MemberJourney({
   const zoomRef = useRef(zoom);
   const pointersRef = useRef(new Map<number, Point>());
   const pinchDistanceRef = useRef<number | null>(null);
+  const tapStartRef = useRef<{ id: number; x: number; y: number } | null>(null);
 
   zoomRef.current = zoom;
   const basePosition = startingPositions[member.id];
@@ -471,6 +472,15 @@ function MemberJourney({
     offsetRef.current = nextOffset;
     setZoomState(next);
     setOffset(nextOffset);
+  };
+  const worldPointFromClient = (clientX: number, clientY: number) => {
+    const bounds = mapRef.current?.getBoundingClientRect();
+    if (!bounds) return null;
+    const currentZoom = zoomRef.current;
+    return {
+      x: cameraAnchorRef.current.x + offsetRef.current.x + (((clientX - bounds.left) / bounds.width) - 0.5) * (mapViewportRef.current.x / currentZoom),
+      y: cameraAnchorRef.current.y + offsetRef.current.y + (((clientY - bounds.top) / bounds.height) - 0.5) * (mapViewportRef.current.y / currentZoom),
+    };
   };
   const focusOf = (clientX: number, clientY: number) => {
     const bounds = mapRef.current?.getBoundingClientRect();
