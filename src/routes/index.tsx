@@ -8,6 +8,8 @@ import {
   HandHeart,
   Map as MapIcon,
   PackageOpen,
+  Send,
+
 
   Sparkles,
   Star,
@@ -220,7 +222,7 @@ function JourneyGame() {
     window.setTimeout(() => setToast(""), 2800);
   };
 
-  const leaveSignal = (kind: SignalKind) => {
+  const leaveSignal = (kind: SignalKind, note?: string) => {
     const current = positionRef.current;
     if (kind === "resolve") {
       const resolved: Signal = {
@@ -248,7 +250,7 @@ function JourneyGame() {
       from: "A",
       kind,
       position: { x: current.x + 34, y: current.y - 26 },
-      note: kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns.",
+      note: note?.trim() || (kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns."),
     };
     setSignals((currentSignals) => [signal, ...currentSignals]);
     pushToast(kind === "help" ? "A's fire will appear as distant smoke on B's map" : "The chime will become visible wind on B's path");
@@ -432,7 +434,7 @@ function MemberJourney({
   isCurrentPlayer: boolean;
   onBack: () => void;
   onMoveTo: (point: Point) => void;
-  onSignal: (kind: SignalKind) => void;
+  onSignal: (kind: SignalKind, note?: string) => void;
   onResolve: () => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
@@ -444,6 +446,9 @@ function MemberJourney({
   const open = signals.find((signal) => signal.id === openedSignal);
   const source = members.find((item) => item.id === open?.from);
   const openDiscovery = discoveries.find((item) => item.id === openedDiscovery);
+  const [composer, setComposer] = useState<SignalKind | null>(null);
+  const [draft, setDraft] = useState("");
+  const draftRef = useRef<HTMLInputElement | null>(null);
   const [zoom, setZoomState] = useState(1);
   const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
   const [mapViewport, setMapViewport] = useState<Point>({ x: viewSize.width, y: viewSize.height });
