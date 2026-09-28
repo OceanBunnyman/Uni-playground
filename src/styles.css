@@ -200,8 +200,6 @@
 .journey-map {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  background-image: radial-gradient(circle at 20% 18%, color-mix(in oklab, var(--surface) 65%, transparent) 0 2px, transparent 3px), radial-gradient(circle at 74% 65%, color-mix(in oklab, var(--terrain-deep) 12%, transparent) 0 1px, transparent 2px);
-  background-size: 38px 38px, 26px 26px;
   background-color: var(--member-map);
   user-select: none;
 }
