@@ -532,7 +532,7 @@ function MemberJourney({
         )}
         <div className="min-w-0 text-center">
           <p className="truncate text-sm font-semibold">{member.name} · {member.region}</p>
-          <p className="text-[10px] text-muted-foreground">{isCurrentPlayer ? (destination ? "Walking through the mist" : "Long-press the map to walk somewhere new") : "Viewing a companion's journey"}</p>
+          <p className="text-[10px] text-muted-foreground">{isCurrentPlayer ? (destination ? "Walking through the mist" : "Tap the map to walk somewhere new") : "Viewing a companion's journey"}</p>
         </div>
         <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold text-player-ink", member.color)}>{member.id}</div>
       </header>
@@ -585,8 +585,19 @@ function MemberJourney({
           }
           pinchDistanceRef.current = distance;
         }}
-        onPointerUp={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
-        onPointerCancel={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
+        onPointerUp={(event) => {
+          finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef);
+          const tap = tapStartRef.current;
+          tapStartRef.current = null;
+          if (!tap || tap.id !== event.pointerId || pointersRef.current.size > 0) return;
+          if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 12) return;
+          const point = worldPointFromClient(event.clientX, event.clientY);
+          if (point) onMoveTo(point);
+        }}
+        onPointerCancel={(event) => {
+          tapStartRef.current = null;
+          finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef);
+        }}
       >
         <PersonalLandscape member={member} camera={camera} zoom={zoom} viewport={mapViewport} />
         {signals.filter((signal) => !signal.to || signal.from === member.id || signal.to.includes(member.id)).slice(0, 8).map((signal, index) => (
@@ -876,13 +887,7 @@ function finishMapPointer(
   pointersRef: { current: Map<number, Point> },
   pinchDistanceRef: { current: number | null },
 ) {
-  clearLongPress(element);
+  element; element = element;
   pointersRef.current.delete(pointerId);
   if (pointersRef.current.size < 2) pinchDistanceRef.current = null;
-}
-
-function clearLongPress(element: HTMLElement) {
-  const timer = Number(element.dataset["longPressTimer"]);
-  if (Number.isFinite(timer)) window.clearTimeout(timer);
-  delete element.dataset["longPressTimer"];
 }
