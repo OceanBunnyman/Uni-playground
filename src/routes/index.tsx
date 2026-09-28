@@ -547,10 +547,7 @@ function MemberJourney({
           />
         ))}
         {isCurrentPlayer && (
-          <>
-            <FogLayer camera={position} explored={explored} zoom={zoom} />
-            <FogShaderCanvas camera={position} explored={explored} zoom={zoom} viewSize={{ x: viewSize.width, y: viewSize.height }} />
-          </>
+          <FogShaderCanvas camera={position} explored={explored} zoom={zoom} viewSize={{ x: viewSize.width, y: viewSize.height }} />
         )}
 
         {isCurrentPlayer && destination && <DestinationMarker camera={position} destination={destination} zoom={zoom} />}
@@ -701,24 +698,6 @@ function WeatherLayer({ member, cleared }: { member: Member; cleared: boolean })
       <span className="absolute right-[4%] top-[30%] h-20 w-52 rounded-full bg-surface/50 blur-xl" />
       {cleared && <CloudSun className="absolute right-[16%] top-[12%] h-14 w-14 text-primary/70" />}
     </div>
-  );
-}
-
-function FogLayer({ camera, explored, zoom }: { camera: Point; explored: Point[]; zoom: number }) {
-  const width = viewSize.width / zoom;
-  const height = viewSize.height / zoom;
-  const viewBox = `${camera.x - width / 2} ${camera.y - height / 2} ${width} ${height}`;
-  return (
-    <svg className="fog-layer pointer-events-none absolute inset-0 z-[35] h-full w-full" viewBox={viewBox} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <mask id="explored-fog-mask">
-          <rect x={camera.x - 1200} y={camera.y - 1600} width="2400" height="3200" fill="white" />
-          {explored.map((point, index) => <circle key={`${point.x}-${point.y}-${index}`} cx={point.x} cy={point.y} r="72" fill="black" />)}
-          <circle cx={startingPositions.A.x} cy={startingPositions.A.y} r="92" fill="black" />
-        </mask>
-      </defs>
-      <rect x={camera.x - 1200} y={camera.y - 1600} width="2400" height="3200" mask="url(#explored-fog-mask)" />
-    </svg>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Point = { x: number; y: number };
 
@@ -50,23 +50,29 @@ const fragmentShaderSource = /* glsl */ `
     vec2 screenUv = vec2(gl_FragCoord.x, uResolution.y - gl_FragCoord.y) / uResolution;
     vec2 world = uCamera + (screenUv - 0.5) * uViewSize / uZoom;
     float clearing = 0.0;
+    float boundaryNoise = fbm(world * 0.021 + vec2(8.3, 2.7));
+    float boundaryDetail = noise(world * 0.057 - vec2(3.1, 6.4));
 
     for (int i = 0; i < MAX_CLEARINGS; i++) {
       if (i >= uClearingCount) break;
-      float radius = i == 0 ? 92.0 : 72.0;
-      float edge = 7.0 / uZoom;
-      clearing = max(clearing, 1.0 - smoothstep(radius - edge, radius + edge, distance(world, uClearings[i])));
+      float radius = i == 0 ? 94.0 : 69.0;
+      float warpedRadius = radius + (boundaryNoise - 0.5) * 42.0 + (boundaryDetail - 0.5) * 14.0;
+      float feather = 18.0 / sqrt(uZoom);
+      clearing = max(clearing, 1.0 - smoothstep(warpedRadius - feather, warpedRadius + feather, distance(world, uClearings[i])));
     }
 
-    if (clearing > 0.995) discard;
+    if (clearing > 0.998) discard;
 
     vec2 drift = vec2(uTime * 0.018, -uTime * 0.011);
-    float broad = fbm(world * 0.006 + drift);
-    float detail = fbm(world * 0.014 - drift * 1.7 + vec2(4.2, 1.8));
-    float density = smoothstep(0.18, 0.92, broad * 0.72 + detail * 0.4);
-    vec3 color = mix(uFogDeep, uFogLight, density);
-    float edgeMist = 1.0 - clearing;
-    gl_FragColor = vec4(color, max(0.92, edgeMist));
+    float broad = fbm(world * 0.0045 + drift);
+    float middle = fbm(world * 0.011 - drift * 1.3 + vec2(4.2, 1.8));
+    float wisps = fbm(world * 0.026 + drift * 2.1 + vec2(1.7, 9.4));
+    float density = smoothstep(0.22, 0.88, broad * 0.62 + middle * 0.34 + wisps * 0.18);
+    float cloudBody = smoothstep(0.26, 0.72, broad * 0.76 + middle * 0.3);
+    vec3 color = mix(uFogDeep, uFogLight, density * 0.88 + wisps * 0.12);
+    float fogAlpha = mix(0.38, 0.82, cloudBody) + wisps * 0.08;
+    float boundaryVeil = 1.0 - smoothstep(0.0, 0.94, clearing);
+    gl_FragColor = vec4(color, clamp(fogAlpha * boundaryVeil, 0.0, 0.9));
   }
 `;
 
@@ -91,6 +97,7 @@ function createShader(gl: WebGLRenderingContext, type: number, source: string) {
 
 export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: Point; explored: Point[]; zoom: number; viewSize: Point }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [ready, setReady] = useState(false);
   const stateRef = useRef({ camera, explored, zoom, viewSize });
   stateRef.current = { camera, explored, zoom, viewSize };
 
@@ -108,6 +115,7 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    setReady(true);
 
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -175,5 +183,25 @@ export function FogShaderCanvas({ camera, explored, zoom, viewSize }: { camera: 
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="fog-shader-canvas pointer-events-none absolute inset-0 z-[36] h-full w-full" aria-hidden="true" />;
+  const width = viewSize.x / zoom;
+  const height = viewSize.y / zoom;
+  const viewBox = `${camera.x - width / 2} ${camera.y - height / 2} ${width} ${height}`;
+
+  return (
+    <>
+      {!ready && (
+        <svg className="fog-layer pointer-events-none absolute inset-0 z-[35] h-full w-full" viewBox={viewBox} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <mask id="explored-fog-fallback-mask">
+              <rect x={camera.x - 1200} y={camera.y - 1600} width="2400" height="3200" fill="white" />
+              {explored.map((point, index) => <circle key={`${point.x}-${point.y}-${index}`} cx={point.x} cy={point.y} r="72" fill="black" />)}
+              <circle cx="198" cy="615" r="92" fill="black" />
+            </mask>
+          </defs>
+          <rect x={camera.x - 1200} y={camera.y - 1600} width="2400" height="3200" mask="url(#explored-fog-fallback-mask)" />
+        </svg>
+      )}
+      <canvas ref={canvasRef} className="fog-shader-canvas pointer-events-none absolute inset-0 z-[36] h-full w-full" aria-hidden="true" />
+    </>
+  );
 }
