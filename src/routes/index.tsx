@@ -629,30 +629,34 @@ function MemberJourney({
       </div>
 
 
-      <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
-        <MapIcon />
-      </Button>
-
-      <div className="absolute inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pr-20 sm:px-6 sm:pb-6 sm:pr-24">
-        {toast && <div className="mx-auto mb-3 w-fit max-w-[90%] rounded-full bg-foreground/90 px-4 py-2 text-center text-xs text-background shadow-soft">{toast}</div>}
+      <div className="absolute left-4 top-[calc(max(1rem,env(safe-area-inset-top))+4.75rem)] z-50 flex w-fit flex-col items-stretch gap-2 sm:top-[5.75rem]">
         {isCurrentPlayer ? (
-          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-surface/95 p-3 shadow-dock backdrop-blur-md">
-            <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-fire-soft text-foreground hover:bg-fire-soft/80" onClick={() => onSignal("help")}>
+          <>
+            <Button variant="ghost" className="h-11 justify-start gap-2 rounded-full bg-fire-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-fire-soft/80" onClick={() => onSignal("help")}>
               <Flame className="text-fire" /><span className="text-[11px]">Ask for help</span>
             </Button>
-            <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-post-soft text-foreground hover:bg-post-soft/80" onClick={() => onSignal("reminder")}>
+            <Button variant="ghost" className="h-11 justify-start gap-2 rounded-full bg-post-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-post-soft/80" onClick={() => onSignal("reminder")}>
               <BellRing className="text-post" /><span className="text-[11px]">Remind</span>
             </Button>
-            <Button variant="ghost" className="h-14 flex-col gap-1 rounded-xl bg-signal/35 text-foreground hover:bg-signal/45" onClick={() => onSignal("resolve")}>
+            <Button variant="ghost" className="h-11 justify-start gap-2 rounded-full bg-signal/45 px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-signal/60" onClick={() => onSignal("resolve")}>
               <CloudSun className="text-primary" /><span className="text-[11px]">Resolved</span>
             </Button>
-          </div>
+          </>
         ) : (
-          <div className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface/92 px-4 py-3 text-xs text-muted-foreground shadow-dock backdrop-blur-md">
-            <Eye className="h-4 w-4" />This is {member.name}'s path — look around at the traces along the way
+          <div className="flex max-w-[11rem] items-center gap-2 rounded-full border border-border bg-surface/92 px-4 py-2.5 text-[11px] leading-snug text-muted-foreground shadow-dock backdrop-blur-md">
+            <Eye className="h-4 w-4 shrink-0" />Viewing {member.name}'s path — look around at the traces
           </div>
         )}
+        <Button variant="secondary" size="icon" className="w-fit rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
+          <MapIcon />
+        </Button>
       </div>
+
+      {toast && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">
+          <div className="mx-auto w-fit max-w-[90%] rounded-full bg-foreground/90 px-4 py-2 text-center text-xs text-background shadow-soft">{toast}</div>
+        </div>
+      )}
 
       {open && source && (
         <div className="absolute inset-0 z-[60] flex items-end bg-overlay p-4 sm:items-center sm:justify-center" onClick={onCloseSignal}>
