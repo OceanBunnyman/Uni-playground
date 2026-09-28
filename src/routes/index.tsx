@@ -56,6 +56,7 @@ type Signal = {
   kind: SignalKind;
   note: string;
   position: Point;
+  to?: MemberId[] | undefined;
 };
 
 type Discovery = {
@@ -216,7 +217,7 @@ function JourneyGame() {
     window.setTimeout(() => setToast(""), 2800);
   };
 
-  const leaveSignal = (kind: SignalKind, note?: string, resolvedId?: number) => {
+  const leaveSignal = (kind: SignalKind, note?: string, resolvedId?: number, to?: MemberId[]) => {
     const current = positionRef.current;
     if (kind === "resolve") {
       const resolved: Signal = {
@@ -244,10 +245,12 @@ function JourneyGame() {
       from: "A",
       kind,
       position: { x: current.x + 34, y: current.y - 26 },
+      to: to && to.length ? to : undefined,
       note: note?.trim() || (kind === "help" ? "The road ahead is tough — I'll light a fire here." : "I hung a wind chime here: listen to the wind when the path turns."),
     };
     setSignals((currentSignals) => [signal, ...currentSignals]);
-    pushToast(kind === "help" ? "A's fire will appear as distant smoke on B's map" : "The chime will become visible wind on B's path");
+    const names = to && to.length ? to.map((id) => members.find((m) => m.id === id)?.name ?? id).join(", ") : "everyone";
+    pushToast(kind === "help" ? `Your fire rises as smoke on ${names}'s map` : `Your chime drifts as wind toward ${names}`);
   };
 
   if (active) {
@@ -424,7 +427,7 @@ function MemberJourney({
   isCurrentPlayer: boolean;
   onBack: () => void;
   onMoveTo: (point: Point) => void;
-  onSignal: (kind: SignalKind, note?: string) => void;
+  onSignal: (kind: SignalKind, note?: string, resolvedId?: number, to?: MemberId[]) => void;
   onResolve: (signalId: number) => void;
   onOpenSignal: (id: number) => void;
   onCloseSignal: () => void;
@@ -438,6 +441,7 @@ function MemberJourney({
   const openDiscovery = discoveries.find((item) => item.id === openedDiscovery);
   const [composer, setComposer] = useState<SignalKind | null>(null);
   const [draft, setDraft] = useState("");
+  const [recipients, setRecipients] = useState<MemberId[]>([]);
   const draftRef = useRef<HTMLInputElement | null>(null);
   const [zoom, setZoomState] = useState(1);
   const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
@@ -595,7 +599,7 @@ function MemberJourney({
       >
         <PersonalLandscape member={member} camera={camera} zoom={zoom} viewport={mapViewport} />
         <WeatherLayer member={member} cleared={weatherCleared} />
-        {signals.slice(0, 8).map((signal, index) => (
+        {signals.filter((signal) => !signal.to || signal.from === member.id || signal.to.includes(member.id)).slice(0, 8).map((signal, index) => (
           <MappedSignal
             key={signal.id}
             signal={signal}
@@ -646,14 +650,26 @@ function MemberJourney({
         <div className="pointer-events-auto mx-auto flex w-fit flex-col items-center gap-2">
           {composer && (
             <form
-              className="flex items-center gap-2 rounded-full border border-border bg-surface/95 py-1.5 pl-4 pr-1.5 shadow-dock backdrop-blur-md"
               onSubmit={(event) => {
                 event.preventDefault();
-                onSignal(composer, draft);
+                onSignal(composer, draft, undefined, recipients);
                 setComposer(null);
                 setDraft("");
+                setRecipients([]);
               }}
+              className="flex flex-col items-stretch gap-2 rounded-3xl border border-border bg-surface/95 p-2 shadow-dock backdrop-blur-md"
             >
+              <div className="flex flex-wrap items-center gap-1.5 px-1 text-[10px] text-muted-foreground">
+                <span>To</span>
+                <button type="button" onClick={() => setRecipients([])} className={cn("rounded-full px-2.5 py-1 font-semibold", recipients.length === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-foreground")}>Everyone</button>
+                {members.filter((m) => m.id !== member.id).map((m) => {
+                  const on = recipients.includes(m.id);
+                  return (
+                    <button key={m.id} type="button" aria-pressed={on} onClick={() => setRecipients((cur) => on ? cur.filter((id) => id !== m.id) : [...cur, m.id])} className={cn("rounded-full px-2.5 py-1 font-semibold", on ? "bg-primary text-primary-foreground" : "bg-muted text-foreground")}>{m.name}</button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-2 pl-2">
               <input
                 ref={draftRef}
                 value={draft}
@@ -666,6 +682,7 @@ function MemberJourney({
               <Button type="submit" size="icon" className="h-8 w-8 shrink-0 rounded-full" aria-label="Leave the signal">
                 <Send className="h-4 w-4" />
               </Button>
+              </div>
             </form>
           )}
           <div className="flex items-center gap-2">
@@ -815,8 +832,8 @@ function DestinationMarker({ camera, destination, zoom, viewport }: { camera: Po
 function MappedSignal({ signal, viewer, camera, zoom, viewport, index, onOpen }: { signal: Signal; viewer: MemberId; camera: Point; zoom: number; viewport: Point; index: number; onOpen: () => void }) {
   const screen = toScreen(signal.position, camera, zoom, viewport);
   if (screen.x < -18 || screen.x > 118 || screen.y < -18 || screen.y > 118) return null;
-  const isSmoke = signal.kind === "help" && viewer === "B";
-  const isWind = signal.kind === "reminder" && viewer === "B";
+  const isSmoke = signal.kind === "help" && viewer !== signal.from;
+  const isWind = signal.kind === "reminder" && viewer !== signal.from;
   const isCloudClear = signal.kind === "resolve" && (viewer === "A" || viewer === "B");
   const isStar = signal.kind === "thanks";
 
@@ -868,9 +885,9 @@ function SignalIcon({ kind, className }: { kind: SignalKind; className?: string 
 }
 
 function effectCopy(kind: SignalKind, viewer: MemberId, source: MemberId) {
-  if (kind === "help" && viewer === "B") return "A's fire becomes smoke on B's map";
+  if (kind === "help" && viewer !== source) return "A teammate's fire becomes smoke on your map";
   if (kind === "resolve" && (viewer === "A" || viewer === "B")) return "The mist parts and the sky clears";
-  if (kind === "reminder" && viewer === "B") return "The chime becomes wind on B's path";
+  if (kind === "reminder" && viewer !== source) return "A teammate's chime becomes wind on your path";
   if (kind === "thanks") return `A star hung by ${source}, visible to everyone`;
   return "It takes a different shape in your landscape";
 }
