@@ -440,13 +440,47 @@ function MemberJourney({
   const open = signals.find((signal) => signal.id === openedSignal);
   const source = members.find((item) => item.id === open?.from);
   const openDiscovery = discoveries.find((item) => item.id === openedDiscovery);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoomState] = useState(1);
+  const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
   const mapRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef(zoom);
   const pointersRef = useRef(new Map<number, Point>());
   const pinchDistanceRef = useRef<number | null>(null);
 
   zoomRef.current = zoom;
+  const basePosition = isCurrentPlayer ? position : startingPositions[member.id];
+  const camera = { x: basePosition.x + offset.x, y: basePosition.y + offset.y };
+  const baseRef = useRef(basePosition);
+  baseRef.current = basePosition;
+
+  // Zoom the whole map around a focal point (fractions of the viewport), not around the player.
+  const zoomAt = (nextZoomRaw: number, fx = 0.5, fy = 0.5) => {
+    const prev = zoomRef.current;
+    const next = clampZoom(nextZoomRaw);
+    if (next === prev) return;
+    const base = baseRef.current;
+    const off = offsetRef.current;
+    const cam = { x: base.x + off.x, y: base.y + off.y };
+    const wx = cam.x + (fx - 0.5) * (viewSize.width / prev);
+    const wy = cam.y + (fy - 0.5) * (viewSize.height / prev);
+    const nextOffset = {
+      x: wx - (fx - 0.5) * (viewSize.width / next) - base.x,
+      y: wy - (fy - 0.5) * (viewSize.height / next) - base.y,
+    };
+    zoomRef.current = next;
+    offsetRef.current = nextOffset;
+    setZoomState(next);
+    setOffset(nextOffset);
+  };
+  const focusOf = (clientX: number, clientY: number) => {
+    const bounds = mapRef.current?.getBoundingClientRect();
+    if (!bounds) return { fx: 0.5, fy: 0.5 };
+    return { fx: (clientX - bounds.left) / bounds.width, fy: (clientY - bounds.top) / bounds.height };
+  };
+  const zoomAtRef = useRef(zoomAt);
+  zoomAtRef.current = zoomAt;
 
   useEffect(() => {
     const map = mapRef.current;
@@ -455,14 +489,15 @@ function MemberJourney({
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1);
-      setZoom((current) => clampZoom(current * Math.exp(-delta * 0.0015)));
+      const { fx, fy } = focusOf(event.clientX, event.clientY);
+      zoomAtRef.current(zoomRef.current * Math.exp(-delta * 0.0015), fx, fy);
     };
 
     map.addEventListener("wheel", handleWheel, { passive: false });
     return () => map.removeEventListener("wheel", handleWheel);
   }, []);
 
-  const changeZoom = (factor: number) => setZoom((current) => clampZoom(current * factor));
+  const changeZoom = (factor: number) => zoomAt(zoomRef.current * factor);
 
   return (
     <main className={cn("relative mx-auto min-h-dvh max-w-3xl overflow-hidden text-foreground sm:my-6 sm:min-h-[calc(100vh-3rem)] sm:rounded-3xl sm:border sm:border-border sm:shadow-map", member.theme)}>
@@ -470,7 +505,7 @@ function MemberJourney({
         {isCurrentPlayer ? (
           <span className="h-10 w-10" aria-hidden="true" />
         ) : (
-          <Button variant="secondary" size="icon" className="rounded-full bg-surface/90 shadow-soft backdrop-blur" onClick={onBack} aria-label="返回Overview of all four routes">
+          <Button variant="secondary" size="icon" className="rounded-full bg-surface/90 shadow-soft backdrop-blur" onClick={onBack} aria-label="Back to the route overview">
             <ArrowLeft />
           </Button>
         )}
@@ -501,8 +536,8 @@ function MemberJourney({
             const bounds = map.getBoundingClientRect();
             const currentZoom = zoomRef.current;
             onMoveTo({
-              x: position.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (viewSize.width / currentZoom),
-              y: position.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (viewSize.height / currentZoom),
+              x: position.x + offsetRef.current.x + (((event.clientX - bounds.left) / bounds.width) - 0.5) * (viewSize.width / currentZoom),
+              y: position.y + offsetRef.current.y + (((event.clientY - bounds.top) / bounds.height) - 0.5) * (viewSize.height / currentZoom),
             });
           }, 420);
           map.dataset["longPressTimer"] = String(timer);
@@ -517,21 +552,23 @@ function MemberJourney({
           if (distance === null) return;
           const previousDistance = pinchDistanceRef.current;
           if (previousDistance && previousDistance > 0) {
-            setZoom((current) => clampZoom(current * (distance / previousDistance)));
+            const [a, b] = points;
+            const { fx, fy } = focusOf((a!.x + b!.x) / 2, (a!.y + b!.y) / 2);
+            zoomAt(zoomRef.current * (distance / previousDistance), fx, fy);
           }
           pinchDistanceRef.current = distance;
         }}
         onPointerUp={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
         onPointerCancel={(event) => finishMapPointer(event.currentTarget, event.pointerId, pointersRef, pinchDistanceRef)}
       >
-        <PersonalLandscape member={member} camera={isCurrentPlayer ? position : startingPositions[member.id]} zoom={zoom} />
+        <PersonalLandscape member={member} camera={camera} zoom={zoom} />
         <WeatherLayer member={member} cleared={weatherCleared} />
         {signals.slice(0, 8).map((signal, index) => (
           <MappedSignal
             key={signal.id}
             signal={signal}
             viewer={member.id}
-            camera={isCurrentPlayer ? position : startingPositions[member.id]}
+            camera={camera}
             zoom={zoom}
             index={index}
             onOpen={() => onOpenSignal(signal.id)}
@@ -541,18 +578,18 @@ function MemberJourney({
           <DiscoveryMarker
             key={discovery.id}
             discovery={discovery}
-            camera={position}
+            camera={camera}
             zoom={zoom}
             completed={completedDiscoveries.has(discovery.id)}
           />
         ))}
         {isCurrentPlayer && (
-          <FogShaderCanvas camera={position} explored={explored} zoom={zoom} viewSize={{ x: viewSize.width, y: viewSize.height }} />
+          <FogShaderCanvas camera={camera} explored={explored} zoom={zoom} viewSize={{ x: viewSize.width, y: viewSize.height }} />
         )}
 
-        {isCurrentPlayer && destination && <DestinationMarker camera={position} destination={destination} zoom={zoom} />}
+        {isCurrentPlayer && destination && <DestinationMarker camera={camera} destination={destination} zoom={zoom} />}
 
-        <div className="player-piece absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-75">
+        <div className="player-piece absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${toScreen(basePosition, camera, zoom).x}%`, top: `${toScreen(basePosition, camera, zoom).y}%` }}>
           <span className="absolute -inset-3 rounded-full border border-foreground/10 bg-surface/45" />
           <span className={cn("relative grid h-11 w-11 place-items-center rounded-full border-2 border-surface text-xs font-bold text-player-ink shadow-player", member.color)}>{member.id}</span>
         </div>
@@ -565,12 +602,12 @@ function MemberJourney({
         <Button variant="ghost" size="icon" className="rounded-none border-b border-border" onClick={() => changeZoom(0.8)} disabled={zoom <= minZoom} aria-label="Zoom out" title="Zoom out">
           <Minus />
         </Button>
-        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => setZoom(minZoom)} disabled={zoom === minZoom} aria-label="Show full map" title="Show full map">
+        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => { zoomAt(minZoom); setOffset({ x: 0, y: 0 }); offsetRef.current = { x: 0, y: 0 }; }} disabled={zoom === minZoom} aria-label="Show full map" title="Show full map">
           <Maximize2 />
         </Button>
       </div>
 
-      <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="进入Overview of all four routes">
+      <Button variant="secondary" size="icon" className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 rounded-full bg-surface/95 shadow-dock backdrop-blur" onClick={onOpenOverview} aria-label="Open the route overview">
         <MapIcon />
       </Button>
 
