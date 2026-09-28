@@ -653,14 +653,40 @@ function MemberJourney({
 
       {isCurrentPlayer && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">
-          <div className="pointer-events-auto mx-auto flex w-fit items-center gap-2">
-            <Button variant="ghost" className="h-11 gap-2 rounded-full bg-fire-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-fire-soft/80" onClick={() => onSignal("help")}>
+        <div className="pointer-events-auto mx-auto flex w-fit flex-col items-center gap-2">
+          {composer && (
+            <form
+              className="flex items-center gap-2 rounded-full border border-border bg-surface/95 py-1.5 pl-4 pr-1.5 shadow-dock backdrop-blur-md"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onSignal(composer, draft);
+                setComposer(null);
+                setDraft("");
+              }}
+            >
+              <input
+                ref={draftRef}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                autoFocus
+                maxLength={80}
+                placeholder={composer === "help" ? "What do you need help with?" : "What should the others know?"}
+                className="w-44 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground/70 sm:w-56"
+              />
+              <Button type="submit" size="icon" className="h-8 w-8 shrink-0 rounded-full" aria-label="Leave the signal">
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+          )}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" className={cn("h-11 gap-2 rounded-full bg-fire-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-fire-soft/80", composer === "help" && "ring-1 ring-fire/40")} onClick={() => setComposer(composer === "help" ? null : "help")}>
               <Flame className="text-fire" /><span className="text-[11px]">Ask for help</span>
             </Button>
-            <Button variant="ghost" className="h-11 gap-2 rounded-full bg-post-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-post-soft/80" onClick={() => onSignal("reminder")}>
+            <Button variant="ghost" className={cn("h-11 gap-2 rounded-full bg-post-soft px-4 text-foreground shadow-dock backdrop-blur-md hover:bg-post-soft/80", composer === "reminder" && "ring-1 ring-post/40")} onClick={() => setComposer(composer === "reminder" ? null : "reminder")}>
               <BellRing className="text-post" /><span className="text-[11px]">Remind</span>
             </Button>
           </div>
+        </div>
         </div>
       )}
 
