@@ -112,7 +112,7 @@ const initialSignals: Signal[] = [
   { id: 2, from: "D", kind: "help", position: { x: 96, y: 560 }, note: "Smoke rises on the sheltered slope — Mimi could use a hand here." },
 ];
 
-const discoveries: Discovery[] = [
+const initialDiscoveries: Discovery[] = [
   { id: "chest-reeds", kind: "chest", position: { x: 460, y: 560 }, title: "A little crate in the reeds", note: "Inside is a warm lantern ember, saved for the next unfamiliar stretch." },
 ];
 
@@ -126,6 +126,7 @@ function JourneyGame() {
   const [explored, setExplored] = useState<Point[]>([startingPositions.A]);
   const [openedDiscovery, setOpenedDiscovery] = useState<string | null>(null);
   const [completedDiscoveries, setCompletedDiscoveries] = useState<Set<string>>(() => new Set());
+  const [discoveries, setDiscoveries] = useState<Discovery[]>(initialDiscoveries);
   const positionRef = useRef(startingPositions.A);
   const destinationRef = useRef<Point | null>(null);
   const selectedRef = useRef<MemberId | null>("A");
@@ -133,6 +134,7 @@ function JourneyGame() {
   const openedSignalRef = useRef<number | null>(null);
   const openedDiscoveryRef = useRef<string | null>(null);
   const completedDiscoveriesRef = useRef(new Set<string>());
+  const discoveriesRef = useRef(initialDiscoveries);
   const encounteredRef = useRef(new Set<number>());
 
   selectedRef.current = selected;
@@ -140,6 +142,19 @@ function JourneyGame() {
   openedSignalRef.current = openedSignal;
   openedDiscoveryRef.current = openedDiscovery;
   completedDiscoveriesRef.current = completedDiscoveries;
+  discoveriesRef.current = discoveries;
+
+  useEffect(() => {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 300 + Math.random() * 220;
+    setDiscoveries(initialDiscoveries.map((discovery) => ({
+      ...discovery,
+      position: {
+        x: startingPositions.A.x + Math.cos(angle) * distance,
+        y: startingPositions.A.y + Math.sin(angle) * distance,
+      },
+    })));
+  }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -169,7 +184,7 @@ function JourneyGame() {
         return [...currentExplored, next];
       });
 
-      const discovery = discoveries.find((item) => {
+      const discovery = discoveriesRef.current.find((item) => {
         if (completedDiscoveriesRef.current.has(item.id)) return false;
         return Math.hypot(next.x - item.position.x, next.y - item.position.y) <= 30;
       });
@@ -234,6 +249,7 @@ function JourneyGame() {
         destination={destination}
         explored={explored}
         openedDiscovery={openedDiscovery}
+        discoveries={discoveries}
         completedDiscoveries={completedDiscoveries}
         isCurrentPlayer={active.id === "A"}
         onBack={() => {
@@ -371,6 +387,7 @@ function MemberJourney({
   destination,
   explored,
   openedDiscovery,
+  discoveries,
   completedDiscoveries,
   isCurrentPlayer,
   onBack,
@@ -392,6 +409,7 @@ function MemberJourney({
   destination: Point | null;
   explored: Point[];
   openedDiscovery: string | null;
+  discoveries: Discovery[];
   completedDiscoveries: Set<string>;
   isCurrentPlayer: boolean;
   onBack: () => void;
