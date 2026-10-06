@@ -1,4 +1,4 @@
-# Campfire Collective
+# Uni-Playground
 
 This minimalist 2D mobile game involves four players working together to reach the end of the map (see the overview in the index, pictured above). When one player (A) encounters difficulties or wants to share their findings, they can light a campfire, plant a stake, etc. Their actions will then be reflected in various ways on the other players’ maps, encouraging them to take an interest in the movements of their teammates (though they can also choose to ignore these cues—the interactions are low-key). 
 The game is essentially designed to foster cooperation among team members in the workplace, but to keep it lighthearted and enjoyable, 
