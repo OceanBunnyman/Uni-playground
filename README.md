@@ -1,8 +1,9 @@
 # Campfire Collective
 
-简约2D 移动端 游戏内容是四个人一起到达地图的终点（overview如index，上面那张） 当其中一个人（A）遇到困难/想要分享收获时 可以燃起篝火或者埋下木桩etc. 这时它的行为会以不同的形式反映在其他人的地图上 让他人有兴趣关注组内其他成员的动向（也可以选择不理会，交互是calm的）（见下面那张图）
-这个游戏本质是为了促进工作中小组成员的合作，但是为了轻松愉快，我不希望游戏的界面是工具化的，而是通过寓教于乐的形式让组员关注到组内的动向
+This minimalist 2D mobile game involves four players working together to reach the end of the map (see the overview in the index, pictured above). When one player (A) encounters difficulties or wants to share their findings, they can light a campfire, plant a stake, etc. Their actions will then be reflected in various ways on the other players’ maps, encouraging them to take an interest in the movements of their teammates (though they can also choose to ignore these cues—the interactions are low-key). 
+The game is essentially designed to foster cooperation among team members in the workplace, but to keep it lighthearted and enjoyable, 
 
+Translated with DeepL.com (free version)
 This project was built with [Lovable](https://lovable.dev).
 
 **Live app**: https://gentle-guiding.lovable.app
